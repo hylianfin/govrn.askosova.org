@@ -61,21 +61,19 @@ export function adminNav(): NavItem[] {
 
 export function homeForRoles(roles: Role[]) {
   if (roles.includes("admin")) return "/admin";
-  if (roles.includes("staff_reviewer")) return "/staff";
   return "/dashboard";
 }
 
-// Admins use the admin and staff consoles, staff use the staff console; the student dashboard is for students only.
+// Administrators use both consoles: Admin (setup) and Review (applications and election day).
 export function consoleLinks(roles: Role[]) {
   const links: { href: string; label: string }[] = [];
   if (roles.includes("admin")) links.push({ href: "/admin", label: "Admin console" });
-  if (roles.includes("admin") || roles.includes("staff_reviewer")) links.push({ href: "/staff", label: "Staff console" });
+  if (roles.includes("admin")) links.push({ href: "/staff", label: "Review console" });
   return links;
 }
 
 export function navForRoles(roles: Role[]) {
   if (roles.includes("admin")) return { title: "Admin", nav: adminNav(), label: "Administrator" };
-  if (roles.includes("staff_reviewer")) return { title: "Staff", nav: staffNav(), label: "Staff Reviewer" };
   if (roles.includes("volunteer")) return { title: "Volunteer", nav: studentNav(roles), label: "Volunteer" };
   return { title: "Student", nav: studentNav(), label: "Student" };
 }

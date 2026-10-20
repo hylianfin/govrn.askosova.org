@@ -1,19 +1,22 @@
 import Image from "next/image";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { KIND_LABEL, ROLE_LABEL, SCHOOL_LABEL, type LiveRace } from "@/lib/live";
+import { useLabels } from "@/components/config-provider";
+import { numberWord } from "@/lib/config";
+import { ROLE_LABEL, type LiveRace } from "@/lib/live";
 
 // A replica of the printed ballot, so the person counting sees what is on the paper in their hand.
 export function BallotPaper({ race, selected, onToggle, disabled }: { race: LiveRace; selected: string[]; onToggle: (id: string) => void; disabled: boolean }) {
+  const { school: schoolName, kind: kindName } = useLabels();
   const exec = race.kind === "exec";
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-white text-[#1b2a5e] shadow-sm">
       <div className="mx-6 h-8 rounded-b-xl bg-[#2b3a82]" />
       <div className="relative px-6 pb-6 pt-5">
         <Image src="/images/logo-mark.png" alt="" width={72} height={72} className="absolute right-5 top-3 h-[72px] w-[72px]" />
-        <p className="text-2xl font-medium uppercase leading-tight tracking-wide">Vote for<br />{SCHOOL_LABEL[race.school]}</p>
-        <p className="text-2xl font-extrabold leading-tight">{KIND_LABEL[race.kind]}</p>
-        {!exec && <p className="mt-1 text-[11px] text-[#1b2a5e]/70">(select up to three people)</p>}
+        <p className="text-2xl font-medium uppercase leading-tight tracking-wide">Vote for<br />{schoolName(race.school)}</p>
+        <p className="text-2xl font-extrabold leading-tight">{kindName(race.kind)}</p>
+        {!exec && <p className="mt-1 text-[11px] text-[#1b2a5e]/70">(select up to {numberWord(race.maxChoices)} {race.maxChoices === 1 ? "person" : "people"})</p>}
 
         <ul className={cn("mt-5", exec ? "space-y-4" : "space-y-1.5")}>
           {race.candidates.map((c) => {

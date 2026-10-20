@@ -1,9 +1,10 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { NavLinks } from "@/components/public/nav-links";
+import { getConfig } from "@/lib/config-server";
 
-export function SiteHeader({ signedIn = false }: { signedIn?: boolean }) {
+export async function SiteHeader({ signedIn = false }: { signedIn?: boolean }) {
+  const c = await getConfig();
   return (
     <header className="sticky top-0 z-50 w-full bg-card shadow-sm">
       <div className="bg-navy text-white">
@@ -12,16 +13,17 @@ export function SiteHeader({ signedIn = false }: { signedIn?: boolean }) {
             <span className="h-1.5 w-1.5 rounded-full bg-danger animate-pulse-ring" />
             Student Government Elections
           </span>
-          <span className="hidden text-white/60 sm:inline">American School of Kosovo</span>
+          <span className="hidden text-white/60 sm:inline">{c.organizationName}</span>
         </div>
       </div>
       <div className="border-b border-border">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link href="/" className="flex shrink-0 items-center gap-3">
-            <Image src="/images/logo-mark.png" alt="ASK" width={40} height={40} className="h-10 w-10 rounded-full" priority />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={c.logoUrl} alt={c.siteName} width={40} height={40} className="h-10 w-10 rounded-full object-contain" />
             <div className="flex flex-col leading-none">
-              <span className="font-display text-lg font-bold uppercase tracking-wide text-navy">ASK Votes</span>
-              <span className="mt-0.5 hidden text-[10px] font-semibold uppercase tracking-[0.2em] text-danger sm:block">Student Government</span>
+              <span className="font-display text-lg font-bold uppercase tracking-wide text-navy">{c.siteName}</span>
+              <span className="mt-0.5 hidden text-[10px] font-semibold uppercase tracking-[0.2em] text-danger sm:block">{c.tagline}</span>
             </div>
           </Link>
           <NavLinks />

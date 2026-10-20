@@ -1,4 +1,4 @@
-export type School = "middle" | "high";
+export type School = string; // a school key from the settings, for example "middle" or "high"
 export type CountingStatus = "not_started" | "counting" | "ended";
 export type BallotKind = "valid" | "invalid" | "blank";
 
@@ -44,8 +44,6 @@ export interface LiveState {
 
 export const EMPTY_LIVE: LiveState = { status: "not_started", races: [] };
 
-export const SCHOOL_LABEL: Record<School, string> = { middle: "Middle School", high: "High School" };
-export const KIND_LABEL: Record<LiveRace["kind"], string> = { exec: "Government", senate: "Senator" };
 export const ROLE_LABEL: Record<string, string> = { president: "President", vice_president: "Vice-president", secretary: "Secretary", treasurer: "Treasurer" };
 
 export const raceBallots = (r: LiveRace) => r.valid + r.invalid + r.blank;
@@ -73,6 +71,7 @@ export interface ChainStatus { ok: boolean; checked: number; broken: number[] }
 
 export interface IntegritySetting {
   school: School;
+  label?: string;
   printedGovernment: number | null;
   printedSenate: number | null;
   issuedOverride: number | null;
@@ -85,11 +84,6 @@ export interface IntegritySetting {
 }
 
 export type EndResult = { ok: true; reconciliation?: Reconciliation } | { ok: false; blocked: true; reconciliation: Reconciliation };
-
-export const RACE_LABEL = (race: string) => {
-  const [kind, school] = race.split("-") as ["exec" | "senate", School];
-  return `${SCHOOL_LABEL[school]} ${KIND_LABEL[kind]}`;
-};
 
 // Quick flags on the count screen. The full check, including the winning margin, is the reconciliation.
 export function ballotFlags(r: LiveRace) {

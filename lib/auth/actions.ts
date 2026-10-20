@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
 import { homeForRoles } from "@/lib/nav";
+import { getConfig } from "@/lib/config-server";
 import { getSiteUrl } from "@/lib/site-url";
 import type { Role } from "@/lib/types";
 
@@ -49,8 +50,9 @@ export async function signUp(prevState: { error?: string; success?: string } | u
   });
   if (!parsed.success) return { error: "Please check your details and try again." };
   const domain = parsed.data.email.toLowerCase().split("@").pop() ?? "";
-  if (domain !== "askosova.org" && !domain.endsWith(".askosova.org")) {
-    return { error: "Only askosova.org email addresses can sign up." };
+  const { emailDomains } = await getConfig();
+  if (emailDomains.length > 0 && !emailDomains.some((d) => domain === d.toLowerCase() || domain.endsWith("." + d.toLowerCase()))) {
+    return { error: `Only ${emailDomains.join(", ")} email addresses can sign up.` };
   }
 
   const supabase = await createClient();

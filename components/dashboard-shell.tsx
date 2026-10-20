@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { useConfig } from "@/components/config-provider";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, User, FileText, Users, Megaphone, Bell, HandHelping, ClipboardCheck, Vote,
@@ -48,6 +48,7 @@ export function DashboardShell({
   switchLinks?: { href: string; label: string }[];
 }) {
   const pathname = usePathname();
+  const cfg = useConfig();
   // Drawer is open only for the path it was opened on, so navigating closes it.
   const [openPath, setOpenPath] = useState<string | null>(null);
   const open = openPath === pathname;
@@ -71,9 +72,10 @@ export function DashboardShell({
   const sidebar = (
     <div className="flex h-full flex-col">
       <div className="flex h-16 shrink-0 items-center gap-3 border-b border-border px-5">
-        <Image src="/images/logo-mark.png" alt="ASK" width={32} height={32} className="h-8 w-8" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={cfg.logoUrl} alt={cfg.siteName} width={32} height={32} className="h-8 w-8 object-contain" />
         <div className="leading-tight">
-          <p className="text-sm font-semibold text-foreground">ASK Elections</p>
+          <p className="text-sm font-semibold text-foreground">{cfg.siteName}</p>
           <p className="text-xs text-muted-foreground">{title} console</p>
         </div>
       </div>

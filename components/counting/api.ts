@@ -13,6 +13,8 @@ export interface CountApi {
   // Ending the election runs the reconciliation. If it finds problems the election stays open and the report is returned;
   // ending it anyway needs a written reason.
   setStatus(status: Exclude<CountingStatus, "not_started">, reason?: string): Promise<EndResult>;
+  // Undo a start pressed by mistake. Only possible while no ballot has been entered.
+  cancelStart(): Promise<void>;
   reconcile(): Promise<Reconciliation>;
   verifyChain(): Promise<ChainStatus>;
   startRecount(race: string, reason: string): Promise<void>;
@@ -47,6 +49,7 @@ export function createCountApi(): CountApi {
       const r = (await call("set_counting", { p_status: status, p_acknowledge: reason ?? null })) as { ok: boolean; blocked?: boolean; reconciliation?: Reconciliation } | null;
       return r && r.blocked ? { ok: false, blocked: true, reconciliation: r.reconciliation! } : { ok: true, reconciliation: r?.reconciliation };
     },
+    cancelStart: async () => { await call("cancel_counting"); },
     reconcile: async () => ((await call("reconciliation")) as Reconciliation) ?? { checks: [], errors: 0, warnings: 0 },
     verifyChain: async () => ((await call("verify_ballot_chain")) as ChainStatus) ?? { ok: true, checked: 0, broken: [] },
     startRecount: async (race, reason) => { await call("start_recount", { p_race: race, p_reason: reason }); },

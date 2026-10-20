@@ -1,5 +1,6 @@
 import type { CountApi } from "@/components/counting/api";
-import { RACE_LABEL, type BallotKind, type Check, type CountingStatus, type HistoryData, type IntegritySetting, type LiveRace, type LiveState, type Reconciliation, type School } from "@/lib/live";
+import { DEFAULT_CONFIG, raceLabel } from "@/lib/config";
+import { type BallotKind, type Check, type CountingStatus, type HistoryData, type IntegritySetting, type LiveRace, type LiveState, type Reconciliation, type School } from "@/lib/live";
 
 // An in-browser stand-in for the counting backend, so the demo behaves like the real thing without saving anything.
 type Who = "a" | "b";
@@ -108,10 +109,10 @@ export function createSim(issuedHigh: () => number) {
     }
     for (const r of SEED) {
       const cur = round(r.race), all = state.ballots.filter((b) => b.race === r.race && b.round === cur), voided = all.filter((b) => b.voided).length;
-      if (all.length >= 10 && voided * 100 > all.length * 10) checks.push({ id: `vd-${r.race}`, level: "warn", school: r.school, race: r.race, title: `${RACE_LABEL(r.race)}: many ballots were undone`, detail: `${voided} of ${all.length} entered ballots were voided. Check the ballot history for who undid them.` });
+      if (all.length >= 10 && voided * 100 > all.length * 10) checks.push({ id: `vd-${r.race}`, level: "warn", school: r.school, race: r.race, title: `${raceLabel(DEFAULT_CONFIG, r.race)}: many ballots were undone`, detail: `${voided} of ${all.length} entered ballots were voided. Check the ballot history for who undid them.` });
       if (cur > 1) {
         const diff = r.candidates.reduce((n, c) => n + Math.abs(votesFor(r.race, c.id) - votesFor(r.race, c.id, cur - 1)), 0);
-        checks.push({ id: `rc-${r.race}`, level: diff > 0 ? "error" : "ok", school: r.school, race: r.race, title: `${RACE_LABEL(r.race)}: round ${cur} compared with round ${cur - 1}`, detail: diff > 0 ? `The recount differs from the earlier count by ${diff} vote(s) in total.` : "The recount matches the earlier count." });
+        checks.push({ id: `rc-${r.race}`, level: diff > 0 ? "error" : "ok", school: r.school, race: r.race, title: `${raceLabel(DEFAULT_CONFIG, r.race)}: round ${cur} compared with round ${cur - 1}`, detail: diff > 0 ? `The recount differs from the earlier count by ${diff} vote(s) in total.` : "The recount matches the earlier count." });
       }
     }
     for (const s of ["middle", "high"] as School[]) {
@@ -146,6 +147,10 @@ export function createSim(issuedHigh: () => number) {
       if (rec.errors > 0 && !(reason && reason.trim().length >= 5)) return { ok: false, blocked: true, reconciliation: rec };
       state.status = "ended"; emit();
       return { ok: true, reconciliation: rec };
+    },
+    cancelStart: async () => {
+      if (state.ballots.length > 0 || state.confirmed.size > 0) throw new Error("Ballots have already been entered, so counting cannot be cancelled.");
+      state.status = "not_started"; emit();
     },
     reconcile: async () => reconcile(),
     verifyChain: async () => ({ ok: true, checked: state.ballots.length, broken: [] }),

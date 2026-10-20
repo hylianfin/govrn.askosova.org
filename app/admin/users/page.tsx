@@ -16,7 +16,7 @@ export default async function AdminUsersPage() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatTile label="Total users" value={users.length} icon={<Users className="h-5 w-5" />} />
         <StatTile label="Students" value={has("student")} icon={<GraduationCap className="h-5 w-5" />} />
-        <StatTile label="Staff reviewers" value={has("staff_reviewer")} icon={<ClipboardCheck className="h-5 w-5" />} />
+        <StatTile label="Volunteers" value={has("volunteer")} icon={<ClipboardCheck className="h-5 w-5" />} />
         <StatTile label="Administrators" value={has("admin")} icon={<ShieldCheck className="h-5 w-5" />} />
       </div>
       <UserList users={users} editable={false} currentUserId={me?.id ?? ""} />

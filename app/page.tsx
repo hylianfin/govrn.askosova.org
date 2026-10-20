@@ -6,6 +6,7 @@ import { Countdown } from "@/components/public/countdown";
 import { SectionHeading } from "@/components/public/page-hero";
 import { StageTracker } from "@/components/public/stage-tracker";
 import { getCurrentElection, getElectionEvents, getAnnouncements } from "@/lib/queries/elections";
+import { getConfig } from "@/lib/config-server";
 import { formatWhen, validTimezone } from "@/lib/datetime";
 import { STAGE_LABELS } from "@/lib/types";
 import { ArrowRight, Megaphone, ShieldCheck, Vote, Users, Trophy, Mic2, CalendarDays } from "lucide-react";
@@ -40,6 +41,7 @@ const steps = [
 ];
 
 export default async function HomePage() {
+  const config = await getConfig();
   const election = await getCurrentElection();
   const events = election ? await getElectionEvents(election.id) : [];
   const announcements = await getAnnouncements(true);
@@ -63,7 +65,7 @@ export default async function HomePage() {
             <div>
               <p className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 font-display text-xs font-semibold uppercase tracking-[0.2em]">
                 <span className="h-2 w-2 rounded-full bg-danger animate-pulse-ring" />
-                {election?.title ?? "ASK Student Government Election"}
+                {election?.title ?? `${config.organizationName} ${config.tagline}`}
                 {election?.academic_year ? ` · ${election.academic_year}` : ""}
               </p>
               <h1 className="mt-6 font-display text-6xl font-bold uppercase leading-[0.9] tracking-tight sm:text-8xl">
@@ -72,7 +74,7 @@ export default async function HomePage() {
                 <span className="block">Your school.</span>
               </h1>
               <p className="mt-6 max-w-xl text-lg text-white/75">
-                The ASK Student Government and Student Senate are decided by students. Step up, run for a seat, and make the case for your class.
+                The {config.organizationName} {config.tagline.toLowerCase()} is decided by students. Step up, run for a seat, and make the case for your class.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Button asChild size="lg" className="h-12 bg-danger px-7 font-display text-base uppercase tracking-wider hover:bg-danger/90">

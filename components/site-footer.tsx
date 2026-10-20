@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { getConfig } from "@/lib/config-server";
 
 const columns = [
   { title: "The Race", links: [{ href: "/executive-team", label: "Executive Team" }, { href: "/senate", label: "Student Senate" }, { href: "/election-timeline", label: "Election Timeline" }, { href: "/announcements", label: "News" }] },
@@ -7,7 +7,8 @@ const columns = [
   { title: "Account", links: [{ href: "/sign-in", label: "Sign In" }, { href: "/sign-up", label: "Create Account" }, { href: "/dashboard/notifications", label: "Notifications" }, { href: "/dashboard/profile", label: "Profile" }] },
 ];
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  const c = await getConfig();
   return (
     <footer className="bg-navy text-white">
       <div className="ribbon" />
@@ -15,14 +16,15 @@ export function SiteFooter() {
         <div className="grid gap-10 md:grid-cols-5">
           <div className="md:col-span-2">
             <Link href="/" className="flex items-center gap-3">
-              <Image src="/images/logo-mark.png" alt="ASK" width={44} height={44} className="h-11 w-11 rounded-full" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={c.logoUrl} alt={c.siteName} width={44} height={44} className="h-11 w-11 rounded-full object-contain" />
               <div className="leading-none">
-                <span className="block font-display text-xl font-bold uppercase tracking-wide">ASK Votes</span>
-                <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60">Student Government Elections</span>
+                <span className="block font-display text-xl font-bold uppercase tracking-wide">{c.siteName}</span>
+                <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60">{c.tagline} Elections</span>
               </div>
             </Link>
             <p className="mt-4 max-w-sm text-sm text-white/70">
-              Applications, eligibility, campaigns and results for the ASK Student Government and Student Senate. One school, one vote.
+              Applications, eligibility, campaigns and results for the {c.organizationName} {c.tagline.toLowerCase() || "election"}.
             </p>
           </div>
           {columns.map((c) => (
@@ -37,7 +39,7 @@ export function SiteFooter() {
           ))}
         </div>
         <div className="mt-12 flex flex-col justify-between gap-3 border-t border-white/15 pt-6 text-xs text-white/50 sm:flex-row">
-          <p>© {new Date().getFullYear()} American School of Kosovo. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} {c.organizationName}. All rights reserved.</p>
           <p>Internal school platform — not a public political election website.</p>
         </div>
       </div>

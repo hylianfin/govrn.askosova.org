@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader, StatTile, EmptyState } from "@/components/dashboard/primitives";
 import type { CountApi } from "@/components/counting/api";
-import { RACE_LABEL, type ChainStatus, type HistoryData, type HistoryRow } from "@/lib/live";
+import { useLabels } from "@/components/config-provider";
+import type { ChainStatus, HistoryData, HistoryRow } from "@/lib/live";
 
-const RACES = ["exec-middle", "senate-middle", "exec-high", "senate-high"];
 const time = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 const stamp = (iso: string) => new Date(iso).toLocaleString("en-GB");
 
@@ -22,6 +22,8 @@ function Marks({ row }: { row: HistoryRow }) {
 
 // Every ballot ever entered, including the ones that were undone. Nothing here can be edited or removed.
 export function BallotHistory({ api, eyebrow }: { api: CountApi; eyebrow: string }) {
+  const { cfg, race: raceName } = useLabels();
+  const RACES = cfg.schools.flatMap((s) => [`exec-${s.key}`, `senate-${s.key}`]);
   const [race, setRace] = useState<string | null>(null);
   const [data, setData] = useState<HistoryData | null>(null);
   const [chain, setChain] = useState<ChainStatus | null>(null);
@@ -52,7 +54,7 @@ export function BallotHistory({ api, eyebrow }: { api: CountApi; eyebrow: string
   const exportCsv = () => {
     const esc = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
     const lines = [["Ballot", "Time", "Race", "Round", "Counter", "Type", "Marks", "Status", "Voided by", "Voided at", "Fingerprint"].map(esc).join(",")];
-    for (const r of rows) lines.push([r.seq, stamp(r.at), RACE_LABEL(r.race), r.round, r.by, r.kind, r.marks.join(" "), r.voided ? "Voided" : "Counted", r.voidedBy ?? "", r.voidedAt ? stamp(r.voidedAt) : "", r.hash].map(esc).join(","));
+    for (const r of rows) lines.push([r.seq, stamp(r.at), raceName(r.race), r.round, r.by, r.kind, r.marks.join(" "), r.voided ? "Voided" : "Counted", r.voidedBy ?? "", r.voidedAt ? stamp(r.voidedAt) : "", r.hash].map(esc).join(","));
     const url = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a"); a.href = url; a.download = "ballot-history.csv"; a.click(); URL.revokeObjectURL(url);
   };
@@ -79,7 +81,7 @@ export function BallotHistory({ api, eyebrow }: { api: CountApi; eyebrow: string
       )}
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatTile label="Ballots entered" value={active + voided} hint={race ? RACE_LABEL(race) : "All races"} />
+        <StatTile label="Ballots entered" value={active + voided} hint={race ? raceName(race) : "All races"} />
         <StatTile label="Counted" value={active} tone="success" />
         <StatTile label="Voided (undone)" value={voided} tone={voided > 0 ? "warning" : "default"} />
       </div>
@@ -109,7 +111,7 @@ export function BallotHistory({ api, eyebrow }: { api: CountApi; eyebrow: string
       <div className="flex flex-wrap items-center gap-3">
         <div className="inline-flex flex-wrap rounded-lg border border-border bg-card p-1">
           {[null, ...RACES].map((r) => (
-            <button key={r ?? "all"} onClick={() => setRace(r)} className={cn("rounded-md px-3 py-1.5 text-sm font-medium transition-colors", race === r ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>{r ? RACE_LABEL(r) : "All races"}</button>
+            <button key={r ?? "all"} onClick={() => setRace(r)} className={cn("rounded-md px-3 py-1.5 text-sm font-medium transition-colors", race === r ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>{r ? raceName(r) : "All races"}</button>
           ))}
         </div>
         <label className="flex items-center gap-2 text-sm text-muted-foreground"><input type="checkbox" checked={showVoided} onChange={(e) => setShowVoided(e.target.checked)} /> Show voided ballots</label>
@@ -128,7 +130,7 @@ export function BallotHistory({ api, eyebrow }: { api: CountApi; eyebrow: string
                   <tr key={r.seq} className={cn(r.voided && "bg-muted/40 text-muted-foreground")}>
                     <td className="px-4 py-2 tabular-nums">{r.seq}</td>
                     <td className="whitespace-nowrap px-4 py-2 tabular-nums">{time(r.at)}</td>
-                    <td className="whitespace-nowrap px-4 py-2">{RACE_LABEL(r.race)}</td>
+                    <td className="whitespace-nowrap px-4 py-2">{raceName(r.race)}</td>
                     <td className="px-4 py-2 tabular-nums">{r.round}</td>
                     <td className="whitespace-nowrap px-4 py-2">{r.by}</td>
                     <td className={cn("px-4 py-2", r.voided && "opacity-60")}><Marks row={r} /></td>

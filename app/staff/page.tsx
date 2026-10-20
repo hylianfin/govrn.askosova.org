@@ -27,7 +27,7 @@ export default async function StaffOverviewPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Staff console"
+        eyebrow="Review console"
         title="Review center"
         description="Applications and campaign materials that need a decision."
         actions={badge ? <Badge className="px-3 py-1 text-sm">{badge}</Badge> : undefined}

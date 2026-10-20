@@ -15,7 +15,7 @@ async function staff() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id).in("role", ["staff_reviewer", "admin"]);
+  const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin");
   return data?.length ? { supabase, user } : null;
 }
 

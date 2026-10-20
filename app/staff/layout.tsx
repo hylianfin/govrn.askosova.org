@@ -10,11 +10,11 @@ export default async function StaffLayout({ children }: { children: React.ReactN
   if (!isStaff(user.roles)) redirect(homeForRoles(user.roles));
   return (
     <DashboardShell
-      title="Staff"
+      title="Review"
       nav={staffNav()}
       userName={user.profile?.full_name || user.email}
       userEmail={user.email}
-      roleLabel={ROLE_LABELS.staff_reviewer}
+      roleLabel={ROLE_LABELS.admin}
       switchLinks={consoleLinks(user.roles)}
     >
       {children}

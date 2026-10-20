@@ -6,7 +6,8 @@ import { AlertTriangle, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/dashboard/primitives";
 import type { CountApi } from "@/components/counting/api";
-import { SCHOOL_LABEL, type IntegritySetting } from "@/lib/live";
+import { useLabels } from "@/components/config-provider";
+import type { IntegritySetting } from "@/lib/live";
 
 type Form = { printedGovernment: string; printedSenate: string; issued: string; registered: string; note: string };
 const toForm = (s: IntegritySetting): Form => ({
@@ -27,6 +28,7 @@ function Field({ label, hint, value, onChange, disabled }: { label: string; hint
 
 // The numbers the count is checked against: ballots printed, ballots given out, and people registered to vote.
 export function IntegritySettings({ api, initial, isAdmin }: { api: CountApi; initial: IntegritySetting[]; isAdmin: boolean }) {
+  const { school: schoolName, cfg } = useLabels();
   const [settings, setSettings] = useState(initial);
   const [forms, setForms] = useState<Record<string, Form>>(() => Object.fromEntries(initial.map((s) => [s.school, toForm(s)])));
   const [saving, setSaving] = useState<string | null>(null);
@@ -44,7 +46,7 @@ export function IntegritySettings({ api, initial, isAdmin }: { api: CountApi; in
     setSaving(s.school);
     try {
       await api.saveIntegrity({ school: s.school, printedGovernment: num(f.printedGovernment), printedSenate: num(f.printedSenate), issued: num(f.issued), registered: num(f.registered), note: f.note.trim() || null });
-      toast.success(`${SCHOOL_LABEL[s.school]} numbers saved.`);
+      toast.success(`${schoolName(s.school)} numbers saved.`);
       await reload();
     } catch (e) { toast.error(e instanceof Error ? e.message : "Could not save."); }
     setSaving(null);
@@ -59,19 +61,19 @@ export function IntegritySettings({ api, initial, isAdmin }: { api: CountApi; in
           const set = (k: keyof Form) => (v: string) => setForms({ ...forms, [s.school]: { ...f, [k]: v } });
           const issued = num(f.issued) ?? s.issuedAuto, reg = num(f.registered) ?? s.registeredAuto, pg = num(f.printedGovernment), ps = num(f.printedSenate);
           const warnings = [
-            pg != null && issued > pg ? `More Government ballots given (${issued}) than printed (${pg}).` : null,
-            ps != null && issued > ps ? `More Senate ballots given (${issued}) than printed (${ps}).` : null,
+            pg != null && issued > pg ? `More ${cfg.governmentLabel} ballots given (${issued}) than printed (${pg}).` : null,
+            ps != null && issued > ps ? `More ${cfg.senateLabel} ballots given (${issued}) than printed (${ps}).` : null,
             issued > reg ? `More ballots given (${issued}) than registered voters (${reg}).` : null,
           ].filter(Boolean) as string[];
           return (
             <section key={s.school} className="rounded-xl border border-border bg-card shadow-sm">
               <header className="flex items-center justify-between border-b border-border px-5 py-4">
-                <h2 className="text-base font-semibold">{SCHOOL_LABEL[s.school]}</h2>
+                <h2 className="text-base font-semibold">{schoolName(s.school)}</h2>
                 {s.locked && <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Lock className="h-3.5 w-3.5" /> Locked, the election has ended</span>}
               </header>
               <div className="grid gap-4 p-5 sm:grid-cols-2">
-                <Field label="Government ballots printed" hint="Paper ballots made for the Government vote." value={f.printedGovernment} onChange={set("printedGovernment")} disabled={!isAdmin || s.locked} />
-                <Field label="Senate ballots printed" hint="Paper ballots made for the Senate vote." value={f.printedSenate} onChange={set("printedSenate")} disabled={!isAdmin || s.locked} />
+                <Field label={`${cfg.governmentLabel} ballots printed`} hint={`Paper ballots made for the ${cfg.governmentLabel} vote.`} value={f.printedGovernment} onChange={set("printedGovernment")} disabled={!isAdmin || s.locked} />
+                <Field label={`${cfg.senateLabel} ballots printed`} hint={`Paper ballots made for the ${cfg.senateLabel} vote.`} value={f.printedSenate} onChange={set("printedSenate")} disabled={!isAdmin || s.locked} />
                 <Field label="Ballots given to voters" hint={`Leave empty to use the polling-desk check-ins (${s.issuedAuto} so far).`} value={f.issued} onChange={set("issued")} disabled={!isAdmin || s.locked} />
                 <Field label="Registered to vote" hint={`Leave empty to use the students on the platform (${s.registeredAuto}).`} value={f.registered} onChange={set("registered")} disabled={!isAdmin || s.locked} />
                 <label className="block space-y-1 sm:col-span-2">

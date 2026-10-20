@@ -19,7 +19,7 @@ async function ctx(staffOnly: boolean) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
   if (staffOnly) {
-    const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id).in("role", ["staff_reviewer", "admin"]);
+    const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin");
     if (!data?.length) return null;
   }
   return { supabase, user };
@@ -171,4 +171,22 @@ export async function updateMyAssignment(id: string, action: "accept" | "decline
   if (error) return { ok: false, error: error.message };
   refresh();
   return { ok: true };
+}
+
+
+export type UserHit = { id: string; name: string; email: string; grade: number | null; volunteer: boolean };
+
+// Find people to make volunteers: by name or email, across everyone who has signed up.
+export async function searchUsers(q: string): Promise<UserHit[]> {
+  const c = await ctx(true);
+  if (!c) return [];
+  const term = q.trim().replace(/[%_,()*]/g, " ").trim().slice(0, 60);
+  if (term.length < 2) return [];
+  const { data } = await c.supabase.from("profiles").select("id, full_name, email, grade_level")
+    .or(`full_name.ilike.%${term}%,email.ilike.%${term}%`).order("full_name").limit(10);
+  const people = (data ?? []) as { id: string; full_name: string | null; email: string; grade_level: number | null }[];
+  if (people.length === 0) return [];
+  const { data: vols } = await c.supabase.from("user_roles").select("user_id").eq("role", "volunteer").in("user_id", people.map((p) => p.id));
+  const isVol = new Set((vols ?? []).map((v: { user_id: string }) => v.user_id));
+  return people.map((p) => ({ id: p.id, name: p.full_name || p.email, email: p.email, grade: p.grade_level, volunteer: isVol.has(p.id) }));
 }

@@ -11,7 +11,8 @@ import { PageHeader, EmptyState } from "@/components/dashboard/primitives";
 import { BallotPaper } from "@/components/counting/ballot-paper";
 import { ReconciliationReport } from "@/components/counting/reconciliation-report";
 import type { CountApi } from "@/components/counting/api";
-import { KIND_LABEL, RACE_LABEL, SCHOOL_LABEL, ballotFlags, raceBallots, type BallotKind, type ChainStatus, type LiveRace, type LiveState, type Reconciliation, type School } from "@/lib/live";
+import { useLabels } from "@/components/config-provider";
+import { ballotFlags, raceBallots, type BallotKind, type ChainStatus, type LiveRace, type LiveState, type Reconciliation, type School } from "@/lib/live";
 
 export interface ConsoleAlert { id: string; title: string; body: string | null }
 
@@ -71,6 +72,7 @@ function withPending(server: LiveState, pending: Pending[]): LiveState {
 export function CountingConsole({ api, initial, isAdmin, base = "/staff", alerts = [], onDismissAlert, pollMs = 20000, demo = false }: {
   api: CountApi; initial: LiveState; isAdmin: boolean; base?: string; alerts?: ConsoleAlert[]; onDismissAlert?: (id: string) => void; pollMs?: number; demo?: boolean;
 }) {
+  const { school: schoolName, kind: kindName, race: raceName } = useLabels();
   const [server, setServer] = useState<LiveState>(initial);
   const [pending, setPending] = useState<Pending[]>([]);
   const [syncedAt, setSyncedAt] = useState(() => Date.now());
@@ -82,6 +84,7 @@ export function CountingConsole({ api, initial, isAdmin, base = "/staff", alerts
   const [report, setReport] = useState<{ rec: Reconciliation; chain: ChainStatus | null } | null>(null);
   const [blocked, setBlocked] = useState<{ rec: Reconciliation; reason: string } | null>(null);
   const [checking, setChecking] = useState(false);
+  const [confirmStart, setConfirmStart] = useState(false);
   const [recountOpen, setRecountOpen] = useState(false);
   const [recountReason, setRecountReason] = useState("");
   const history = useRef<Record<string, Entry[]>>({});
@@ -191,7 +194,7 @@ export function CountingConsole({ api, initial, isAdmin, base = "/staff", alerts
   const startRecount = async () => {
     if (!race) return;
     const key = race.race;
-    const ok = await run(() => api.startRecount(key, recountReason.trim()), `Recount started for ${RACE_LABEL(key)}. Count it again from the paper ballots.`);
+    const ok = await run(() => api.startRecount(key, recountReason.trim()), `Recount started for ${raceName(key)}. Count it again from the paper ballots.`);
     if (ok) { setRecountOpen(false); setRecountReason(""); history.current[key] = []; }
   };
 
@@ -246,13 +249,21 @@ export function CountingConsole({ api, initial, isAdmin, base = "/staff", alerts
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow={isAdmin ? "Admin console" : "Staff console"}
+        eyebrow={isAdmin ? "Admin console" : "Review console"}
         title="Count the ballots"
         description="Take one paper ballot at a time, mark the numbers on it, and record it."
         actions={
           <>
             <Badge variant={badge.variant} className="px-3 py-1 text-sm">{badge.label}</Badge>
-            {isAdmin && live.status === "not_started" && <Button size="sm" onClick={() => run(() => api.setStatus("counting"), "Counting is open.")}><Play className="h-4 w-4" /> Start counting</Button>}
+            {isAdmin && live.status === "not_started" && !confirmStart && <Button size="sm" onClick={() => setConfirmStart(true)}><Play className="h-4 w-4" /> Start counting</Button>}
+            {isAdmin && live.status === "not_started" && confirmStart && (
+              <span className="flex items-center gap-2 rounded-lg border border-warning/50 bg-warning/10 px-3 py-1 text-sm">
+                Open counting for everyone?
+                <Button size="sm" onClick={() => { setConfirmStart(false); run(() => api.setStatus("counting"), "Counting is open."); }}>Yes, start</Button>
+                <Button size="sm" variant="ghost" onClick={() => setConfirmStart(false)}>Cancel</Button>
+              </span>
+            )}
+            {isAdmin && live.status === "counting" && live.races.every((r) => raceBallots(r) === 0 && !r.confirmed) && <Button size="sm" variant="outline" onClick={() => run(() => api.cancelStart(), "Counting was cancelled. Nothing had been counted.")}>Cancel start</Button>}
             {isAdmin && live.status === "counting" && <Button size="sm" variant="destructive" disabled={!allConfirmed} title={allConfirmed ? undefined : "Confirm every race first"} onClick={() => endElection()}><Square className="h-4 w-4" /> End election</Button>}
             {isAdmin && live.status === "ended" && <Button size="sm" variant="outline" onClick={() => run(() => api.setStatus("counting"), "Election reopened.")}><RotateCcw className="h-4 w-4" /> Reopen</Button>}
             <Button asChild size="sm" variant="outline"><Link href={`${base}/ballot-history`}><History className="h-4 w-4" /> Ballot history</Link></Button>
@@ -312,7 +323,7 @@ export function CountingConsole({ api, initial, isAdmin, base = "/staff", alerts
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="font-semibold">{SCHOOL_LABEL[sc]}</p>
+                      <p className="font-semibold">{schoolName(sc)}</p>
                       <p className="mt-0.5 text-xs text-muted-foreground">last ballot {ago(last, now)}</p>
                       <p className="mt-1 text-xs text-muted-foreground">
                         Printed {rs.find((r) => r.kind === "exec")?.printed ?? "–"} / {rs.find((r) => r.kind === "senate")?.printed ?? "–"} · Registered {rs[0]?.registered ?? "–"}
@@ -321,7 +332,7 @@ export function CountingConsole({ api, initial, isAdmin, base = "/staff", alerts
                     <p className="text-2xl font-semibold tabular-nums leading-none">{counted}{issued != null && <span className="text-base text-muted-foreground"> / {issued}</span>}</p>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-1.5">
-                    {rs.map((r) => <Badge key={r.race} variant={r.confirmed ? "success" : raceBallots(r) > 0 ? "warning" : "secondary"}>{KIND_LABEL[r.kind]}{r.confirmed ? " ✓" : ""}</Badge>)}
+                    {rs.map((r) => <Badge key={r.race} variant={r.confirmed ? "success" : raceBallots(r) > 0 ? "warning" : "secondary"}>{kindName(r.kind)}{r.confirmed ? " ✓" : ""}</Badge>)}
                   </div>
                 </button>
               );
@@ -333,7 +344,7 @@ export function CountingConsole({ api, initial, isAdmin, base = "/staff", alerts
               value={race?.kind ?? "exec"} onChange={setKind}
               options={(["exec", "senate"] as const).filter((k) => kinds.includes(k)).map((k) => {
                 const r = live.races.find((x) => x.school === activeSchool && x.kind === k)!;
-                return { id: k, label: KIND_LABEL[k], dot: r.confirmed ? "bg-success" : raceBallots(r) > 0 ? "bg-warning" : "bg-muted-foreground/40" };
+                return { id: k, label: kindName(k), dot: r.confirmed ? "bg-success" : raceBallots(r) > 0 ? "bg-warning" : "bg-muted-foreground/40" };
               })}
             />
           </div>
@@ -343,7 +354,7 @@ export function CountingConsole({ api, initial, isAdmin, base = "/staff", alerts
           {race && (
             <div className="space-y-4">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-lg font-semibold">{RACE_LABEL(race.race)}</h2>
+                <h2 className="text-lg font-semibold">{raceName(race.race)}</h2>
                 {race.round > 1 && <Badge variant="warning">Round {race.round} · recount</Badge>}
                 {race.voided > 0 && <Badge variant="secondary">{race.voided} undone</Badge>}
                 <div className="ml-auto flex flex-wrap gap-2">
@@ -354,7 +365,7 @@ export function CountingConsole({ api, initial, isAdmin, base = "/staff", alerts
 
               {recountOpen && (
                 <div className="space-y-2 rounded-xl border border-warning/50 bg-warning/5 p-4">
-                  <p className="text-sm font-medium">Start a recount of {RACE_LABEL(race.race)}</p>
+                  <p className="text-sm font-medium">Start a recount of {raceName(race.race)}</p>
                   <p className="text-xs text-muted-foreground">The next count starts from zero. The first count stays in the ballot history and is compared with the new one.</p>
                   <input value={recountReason} onChange={(e) => setRecountReason(e.target.value)} placeholder="Why is the race being recounted?" className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                   <div className="flex gap-2">

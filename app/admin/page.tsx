@@ -21,7 +21,7 @@ export default async function AdminOverviewPage() {
     count(supabase.from("applications").select("*", { count: "exact", head: true }).in("status", ["submitted", "under_review"])),
     count(supabase.from("eligibility_rules").select("*", { count: "exact", head: true }).eq("is_active", true)),
     count(supabase.from("application_forms").select("*", { count: "exact", head: true }).eq("is_published", true)),
-    count(supabase.from("user_roles").select("*", { count: "exact", head: true }).in("role", ["staff_reviewer", "admin"])),
+    count(supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "admin")),
     supabase.from("audit_logs").select("id, action, entity_type, created_at").order("created_at", { ascending: false }).limit(5),
   ]);
   const audit: any[] = auditRes.data ?? [];

@@ -5,7 +5,9 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Section } from "@/components/dashboard/primitives";
-import { SCHOOL_LABEL, raceBallots, type LiveState, type School } from "@/lib/live";
+import { getConfig } from "@/lib/config-server";
+import { schoolLabel } from "@/lib/config";
+import { raceBallots, type LiveState, type School } from "@/lib/live";
 
 const STATUS = {
   not_started: { label: "Not started", variant: "secondary" as const },
@@ -17,6 +19,7 @@ const STATUS = {
 export async function ElectionDayCard({ base }: { base: "/staff" | "/admin" }) {
   const user = await getCurrentUser();
   const supabase = await createClient();
+  const config = await getConfig();
   const [{ data }, { count: alerts }] = await Promise.all([
     supabase.rpc("live_results"),
     user
@@ -49,7 +52,7 @@ export async function ElectionDayCard({ base }: { base: "/staff" | "/admin" }) {
             const issued = rs[0]?.issued;
             return (
               <div key={s} className="rounded-lg border border-border p-3">
-                <p className="text-sm text-muted-foreground">{SCHOOL_LABEL[s]}</p>
+                <p className="text-sm text-muted-foreground">{schoolLabel(config, s)}</p>
                 <p className="text-2xl font-semibold tabular-nums">{counted}{issued != null && <span className="text-base text-muted-foreground"> / {issued}</span>}</p>
                 <p className="text-xs text-muted-foreground">ballots counted / issued</p>
               </div>

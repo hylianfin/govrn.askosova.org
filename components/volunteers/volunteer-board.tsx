@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, CalendarDays, MapPin, Pencil, Plus, Trash2, UserPlus, X } from "lucide-react";
+import { useEffect } from "react";
+import { AlertCircle, CalendarDays, MapPin, Pencil, Plus, Search, Trash2, UserPlus, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,8 +12,9 @@ import {
   ACTIVE, ASSIGNMENT_LABEL, ASSIGNMENT_VARIANT, estimateHours, fmtHours, type AssignmentStatus,
 } from "@/lib/volunteers";
 import {
-  assignVolunteer, confirmHours, deleteTask, removeAssignment, saveTask, setAssignmentStatus, type TaskPatch, type VResult,
+  assignVolunteer, confirmHours, deleteTask, removeAssignment, saveTask, searchUsers, setAssignmentStatus, type TaskPatch, type UserHit, type VResult,
 } from "@/lib/actions/volunteers";
+import { setUserRole } from "@/lib/actions/roles";
 
 export type TaskRow = TaskPatch & { id: string; starts_at: string | null; ends_at: string | null };
 export type AssignmentRow = {
@@ -115,6 +117,8 @@ export function VolunteerBoard({
           })}
         </div>
       ) : (
+        <>
+        <UserSearch busy={pending} setError={setError} onAdded={() => router.refresh()} />
         <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card shadow-sm">
           {volunteers.map((v) => {
             const mine = assignments.filter((a) => a.volunteer_id === v.id && !["declined"].includes(a.status));
@@ -141,11 +145,58 @@ export function VolunteerBoard({
             );
           })}
           {volunteers.length === 0 && (
-            <li className="p-8 text-center text-sm text-muted-foreground">No volunteers yet. An administrator can give someone the Volunteer role under Admin, Roles.</li>
+            <li className="p-8 text-center text-sm text-muted-foreground">No volunteers yet. Search for a student above to make them a volunteer.</li>
           )}
         </ul>
+        </>
       )}
     </div>
+  );
+}
+
+// Search everyone who has signed up and give them the Volunteer role.
+function UserSearch({ busy, setError, onAdded }: { busy: boolean; setError: (s: string | null) => void; onAdded: () => void }) {
+  const [q, setQ] = useState("");
+  const [hits, setHits] = useState<UserHit[]>([]);
+  const [searched, setSearched] = useState(false);
+  const [working, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (q.trim().length < 2) { setHits([]); setSearched(false); return; }
+    const t = setTimeout(async () => { setHits(await searchUsers(q)); setSearched(true); }, 250);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  function add(h: UserHit) {
+    setError(null);
+    startTransition(async () => {
+      const r = await setUserRole(h.id, "volunteer", true);
+      if (!r.ok) { setError(r.error); return; }
+      setHits((list) => list.map((x) => (x.id === h.id ? { ...x, volunteer: true } : x)));
+      onAdded();
+    });
+  }
+
+  return (
+    <section className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-5">
+      <h3 className="text-sm font-semibold">Add a volunteer</h3>
+      <p className="text-xs text-muted-foreground">Search by name or email, then make them a volunteer so they can be assigned to shifts and use the polling desk.</p>
+      <div className="relative mt-3">
+        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search students and staff" className={cn(box, "w-full pl-9")} />
+      </div>
+      {hits.length > 0 && (
+        <ul className="mt-3 divide-y divide-border rounded-lg border border-border">
+          {hits.map((h) => (
+            <li key={h.id} className="flex items-center gap-3 px-4 py-2.5">
+              <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{h.name}</p><p className="truncate text-xs text-muted-foreground">{h.email}{h.grade ? ` · grade ${h.grade}` : ""}</p></div>
+              {h.volunteer ? <Badge variant="success">Volunteer</Badge> : <Button size="sm" variant="outline" disabled={busy || working} onClick={() => add(h)}><UserPlus className="h-4 w-4" /> Make volunteer</Button>}
+            </li>
+          ))}
+        </ul>
+      )}
+      {searched && hits.length === 0 && <p className="mt-3 text-sm text-muted-foreground">Nobody matches. They need to sign up first.</p>}
+    </section>
   );
 }
 

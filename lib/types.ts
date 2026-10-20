@@ -1,4 +1,4 @@
-export type Role = "student" | "executive_member" | "staff_reviewer" | "volunteer" | "admin";
+export type Role = "student" | "executive_member" | "volunteer" | "admin";
 
 export type ApplicationStatus =
   | "not_started"
@@ -82,7 +82,6 @@ export interface FormQuestion {
 export const ROLE_LABELS: Record<Role, string> = {
   student: "Student",
   executive_member: "Executive Team Member",
-  staff_reviewer: "Staff Reviewer",
   volunteer: "Volunteer",
   admin: "Administrator",
 };

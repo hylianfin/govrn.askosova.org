@@ -12,10 +12,9 @@ import { IntegritySettings } from "@/components/counting/integrity-settings";
 import { createSim } from "./sim";
 import type { Student } from "@/lib/actions/polling";
 
-type View = "volunteer" | "staff" | "admin" | "history" | "integrity";
+type View = "volunteer" | "admin" | "history" | "integrity";
 const VIEWS: { id: View; label: string }[] = [
   { id: "volunteer", label: "Volunteer" },
-  { id: "staff", label: "Staff" },
   { id: "admin", label: "Admin" },
   { id: "history", label: "Ballot history" },
   { id: "integrity", label: "Integrity" },
@@ -69,13 +68,13 @@ export function VoteCountingConsole() {
             </button>
           ))}
         </div>
-        {(view === "staff" || view === "admin") && (
+        {view === "admin" && (
           <Button variant="outline" size="sm" onClick={() => sim.teammate("exec-high", 5)}>A teammate counts 5 ballots (High School Government)</Button>
         )}
-        {(view === "staff" || view === "admin") && (
+        {view === "admin" && (
           <Button variant="outline" size="sm" onClick={() => sim.teammate("exec-high", 250)}>Add 250 ballots (to test a mismatch)</Button>
         )}
-        {(view === "staff" || view === "admin") && (
+        {view === "admin" && (
           <Button variant="outline" size="sm" onClick={() => { setWho(who === "a" ? "b" : "a"); setTimeout(sim.emit, 60); }}>
             <UserRound className="h-4 w-4" /> You are counter {who.toUpperCase()} · switch person
           </Button>
@@ -88,10 +87,10 @@ export function VoteCountingConsole() {
           <PollingDesk issued={issued} eligible={1050} recent={recent} canUndo={false} handlers={polling} />
         </div>
       )}
-      {(view === "staff" || view === "admin") && (
-        <CountingConsole key={view} demo api={sim.api} initial={sim.view()} isAdmin={view === "admin"} base="/staff" />
+      {view === "admin" && (
+        <CountingConsole key={view} demo api={sim.api} initial={sim.view()} isAdmin base="/staff" />
       )}
-      {view === "history" && <BallotHistory key="h" api={sim.api} eyebrow="Staff console" />}
+      {view === "history" && <BallotHistory key="h" api={sim.api} eyebrow="Review console" />}
       {view === "integrity" && <IntegritySettings key="i" api={sim.api} initial={[]} isAdmin />}
     </div>
   );

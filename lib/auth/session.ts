@@ -33,4 +33,5 @@ export function hasRole(roles: Role[], ...allowed: Role[]) {
 }
 
 export function isAdmin(roles: Role[]) { return roles.includes("admin"); }
-export function isStaff(roles: Role[]) { return roles.includes("staff_reviewer") || roles.includes("admin"); }
+// There is one running role: administrators do everything that used to be split between staff and admins.
+export function isStaff(roles: Role[]) { return roles.includes("admin"); }
