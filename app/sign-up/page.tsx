@@ -25,8 +25,8 @@ export default function SignUpPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" required placeholder="name@students.askosova.org" />
-              <p className="text-xs text-muted-foreground">Must end with @students.askosova.org</p>
+              <Input id="email" name="email" type="email" required placeholder="name@askosova.org" />
+              <p className="text-xs text-muted-foreground">Use your school email (any @askosova.org address)</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>

@@ -47,8 +47,9 @@ export async function signUp(prevState: { error?: string; success?: string } | u
     fullName: formData.get("fullName"),
   });
   if (!parsed.success) return { error: "Please check your details and try again." };
-  if (!parsed.data.email.toLowerCase().endsWith("@students.askosova.org")) {
-    return { error: "Only @students.askosova.org email addresses are allowed." };
+  const domain = parsed.data.email.toLowerCase().split("@").pop() ?? "";
+  if (domain !== "askosova.org" && !domain.endsWith(".askosova.org")) {
+    return { error: "Only askosova.org email addresses can sign up." };
   }
 
   const supabase = await createClient();
