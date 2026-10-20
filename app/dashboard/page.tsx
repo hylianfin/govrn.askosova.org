@@ -36,7 +36,7 @@ export default async function DashboardPage() {
 
   const filter = [`applicant_id.eq.${user?.id}`, teamId ? `executive_team_id.eq.${teamId}` : null].filter(Boolean).join(",");
 
-  const [events, announcements, appsRes, membersRes, teamRes, notifsRes, unreadRes] = await Promise.all([
+  const [events, announcements, appsRes, membersRes, teamRes, notifsRes, unreadRes, importRes] = await Promise.all([
     election ? getElectionEvents(election.id) : Promise.resolve([] as any[]),
     getAnnouncements(true),
     supabase.from("applications").select("id, kind, status, executive_team_id, submitted_at").or(filter).order("created_at", { ascending: false }),
@@ -44,7 +44,9 @@ export default async function DashboardPage() {
     teamId ? supabase.from("executive_teams").select("name").eq("id", teamId).maybeSingle() : Promise.resolve({ data: null }),
     supabase.from("notifications").select("id, title, body, link, read, created_at").eq("user_id", user?.id ?? "").order("created_at", { ascending: false }).limit(4),
     supabase.from("notifications").select("*", { count: "exact", head: true }).eq("user_id", user?.id ?? "").eq("read", false),
+    supabase.rpc("pending_import_for_me"),
   ]);
+  const foundImport: boolean = ((importRes.data ?? []) as unknown[]).length > 0;
 
   const apps: App[] = appsRes.data ?? [];
   const exec = apps.find((a) => a.kind === "executive_team");
@@ -70,7 +72,16 @@ export default async function DashboardPage() {
         actions={stageBadge ? <Badge variant="default" className="px-3 py-1 text-sm">{stageBadge}</Badge> : undefined}
       />
 
-      {step ? (
+      {foundImport && (
+        <div className="flex flex-col gap-4 rounded-xl border border-warning/40 bg-warning/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-semibold">We found an application sent under your name</p>
+            <p className="text-sm text-muted-foreground">It came in through Google Forms. Confirm it is you with your grade and homeroom teacher and it will appear in your account.</p>
+          </div>
+          <Button asChild className="shrink-0"><Link href="/dashboard/verify">Confirm it&apos;s me <ArrowRight className="h-4 w-4" /></Link></Button>
+        </div>
+      )}
+      {!foundImport && step ? (
         <div className="flex flex-col gap-4 rounded-xl border border-primary/20 bg-primary/5 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
             <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Sparkles className="h-4 w-4" /></div>
@@ -82,7 +93,7 @@ export default async function DashboardPage() {
           </div>
           <Button asChild className="shrink-0"><Link href={step.href}>{step.cta} <ArrowRight className="h-4 w-4" /></Link></Button>
         </div>
-      ) : (
+      ) : foundImport ? null : (
         <div className="rounded-xl border border-border bg-card p-5 text-sm text-muted-foreground shadow-sm">You&apos;re all caught up. We&apos;ll notify you when something needs your attention.</div>
       )}
 

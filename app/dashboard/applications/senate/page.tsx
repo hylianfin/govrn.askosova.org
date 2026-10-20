@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { getOrCreateSenateApplication } from "@/lib/actions/senate";
@@ -9,8 +10,11 @@ import { STATUS_LABELS } from "@/lib/types";
 
 export default async function SenateApplicationPage() {
   const user = await getCurrentUser();
-  const app = await getOrCreateSenateApplication();
   const supabase = await createClient();
+  // An application already sent through Google Forms under this name: verify it instead of starting a blank one.
+  const { data: found } = await supabase.rpc("pending_import_for_me");
+  if (((found ?? []) as { kind: string }[]).some((r) => r.kind === "senate")) redirect("/dashboard/verify");
+  const app = await getOrCreateSenateApplication();
 
   if (!app || !user) {
     return <p className="text-muted-foreground">The Senate application is not open yet.</p>;

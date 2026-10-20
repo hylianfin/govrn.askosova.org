@@ -88,7 +88,7 @@ export function ImportedList({ rows }: { rows: ImportedRow[] }) {
           <Link2 className="h-4 w-4" /> Link now
         </Button>
       </div>
-      {noEmail > 0 && <p className="rounded-lg border border-warning/40 bg-warning/10 px-4 py-2 text-sm text-warning">{noEmail} response{noEmail > 1 ? "s have" : " has"} no email yet. Attach an account to each one below so it can become an application.</p>}
+      {noEmail > 0 && <p className="rounded-lg border border-warning/40 bg-warning/10 px-4 py-2 text-sm text-warning">{noEmail} response{noEmail > 1 ? "s have" : " has"} no email yet. Students with a matching name are asked to verify with their grade and homeroom teacher; you can also attach an account below.</p>}
       {msg && <p role="status" className="text-sm text-muted-foreground">{msg}</p>}
 
       <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card shadow-sm">
