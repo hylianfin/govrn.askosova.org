@@ -50,8 +50,8 @@ export default async function AdminOverviewPage() {
         <StatTile label="Pending review" value={pending} tone={pending ? "warning" : "success"} icon={<ClipboardCheck className="h-5 w-5" />} href="/staff/applications" />
       </div>
 
-      <Section title="Election progress" description="Move the stage forward from Elections settings." action={<LinkArrow href="/admin/timeline">Edit timeline</LinkArrow>}>
-        <StageTracker events={events} stage={election?.current_stage} timezone={validTimezone(election?.timezone) ? election!.timezone : "UTC"} />
+      <Section title="Election progress" description="Follows the dates on the timeline automatically." action={<LinkArrow href="/admin/timeline">Edit timeline</LinkArrow>}>
+        <StageTracker events={events} timezone={validTimezone(election?.timezone) ? election!.timezone : "UTC"} />
       </Section>
 
       <div className="grid gap-6 lg:grid-cols-3">

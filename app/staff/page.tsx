@@ -1,16 +1,19 @@
 import Link from "next/link";
 import { ClipboardCheck, Users, Building2, Megaphone } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentElection } from "@/lib/queries/elections";
+import { getCurrentElection, getElectionEvents } from "@/lib/queries/elections";
+import { timelinePosition } from "@/lib/timeline";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageHeader, StatTile, Section } from "@/components/dashboard/primitives";
 import { ReviewQueue } from "@/components/dashboard/review-queue";
-import { STAGE_LABELS } from "@/lib/types";
 
 export default async function StaffOverviewPage() {
   const supabase = await createClient();
   const election = await getCurrentElection();
+  const events: any[] = election ? await getElectionEvents(election.id) : [];
+  const pos = timelinePosition(events);
+  const badge = pos.state === "done" ? "Election complete" : pos.state === "none" ? null : `${pos.state === "now" ? "Now" : "Up next"}: ${events[pos.index].title}`;
   const count = (q: any) => q.then((r: any) => r.count ?? 0);
   const [pending, teams, senate, materials, changes] = await Promise.all([
     count(supabase.from("applications").select("*", { count: "exact", head: true }).in("status", ["submitted", "under_review"])),
@@ -26,7 +29,7 @@ export default async function StaffOverviewPage() {
         eyebrow="Staff console"
         title="Review center"
         description="Applications and campaign materials that need a decision."
-        actions={election?.current_stage ? <Badge className="px-3 py-1 text-sm">{STAGE_LABELS[election.current_stage as keyof typeof STAGE_LABELS]}</Badge> : undefined}
+        actions={badge ? <Badge className="px-3 py-1 text-sm">{badge}</Badge> : undefined}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

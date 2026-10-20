@@ -32,9 +32,9 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Verifies the session token locally (no network round trip) and refreshes it when it has expired.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const user = claimsData?.claims?.sub ? { id: claimsData.claims.sub as string } : null;
 
   const path = request.nextUrl.pathname;
   const isProtected = PROTECTED_PREFIXES.some((p) => path.startsWith(p));

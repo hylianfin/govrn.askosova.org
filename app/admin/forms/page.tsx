@@ -3,6 +3,7 @@ import { ClipboardList, ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader, EmptyState } from "@/components/dashboard/primitives";
+import { Button } from "@/components/ui/button";
 
 export default async function AdminFormsPage() {
   const supabase = await createClient();
@@ -10,7 +11,8 @@ export default async function AdminFormsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Election setup" title="Application forms" description="Open a form to edit its questions, preview it, and publish new versions." />
+      <PageHeader eyebrow="Election setup" title="Application forms" description="Open a form to edit its questions, preview it, and publish new versions."
+        actions={<Button asChild variant="outline"><Link href="/admin/forms/import">Import Google Forms responses</Link></Button>} />
       {(forms ?? []).length === 0 ? <EmptyState>No forms configured.</EmptyState> : (
         <ul className="grid gap-4 md:grid-cols-2">
           {(forms ?? []).map((f: any) => {

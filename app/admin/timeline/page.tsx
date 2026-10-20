@@ -5,7 +5,7 @@ import { isoToWall, validTimezone } from "@/lib/datetime";
 
 export default async function AdminTimelinePage() {
   const supabase = await createClient();
-  const { data: election } = await supabase.from("elections").select("id, timezone, current_stage").order("created_at", { ascending: false }).limit(1).maybeSingle();
+  const { data: election } = await supabase.from("elections").select("id, timezone").order("created_at", { ascending: false }).limit(1).maybeSingle();
   if (!election) return <p className="text-muted-foreground">Create an election first under Elections.</p>;
 
   const tz = validTimezone(election.timezone) ? election.timezone : "UTC";
@@ -23,7 +23,7 @@ export default async function AdminTimelinePage() {
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6">
       <PageHeader eyebrow="Election setup" title="Election timeline" description="Pick a date and time for each milestone. Everything saves as you type and updates the public timeline." />
-      <TimelineEditor key={tz} initial={rows} timezone={tz} stage={election.current_stage} />
+      <TimelineEditor key={tz} initial={rows} timezone={tz} />
     </div>
   );
 }

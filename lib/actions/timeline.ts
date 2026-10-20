@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isoToWall, validTimezone, wallToIso } from "@/lib/datetime";
-import { STAGE_LABELS, type ElectionStage } from "@/lib/types";
 
 type Result = { ok: true } | { ok: false; error: string };
 export type EventPatch = {
@@ -86,16 +85,6 @@ export async function deleteEvent(id: string): Promise<Result> {
   const { error } = await ctx.supabase.from("election_events").delete().eq("id", id).eq("election_id", ctx.election.id);
   if (error) return { ok: false, error: error.message };
   await renumber(ctx.supabase, ctx.election.id);
-  refresh();
-  return { ok: true };
-}
-
-export async function setStage(stage: string): Promise<Result> {
-  const ctx = await adminCtx();
-  if (!ctx) return { ok: false, error: "Admins only." };
-  if (!(stage in STAGE_LABELS)) return { ok: false, error: "Unknown stage." };
-  const { error } = await ctx.supabase.from("elections").update({ current_stage: stage as ElectionStage }).eq("id", ctx.election.id);
-  if (error) return { ok: false, error: error.message };
   refresh();
   return { ok: true };
 }

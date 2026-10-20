@@ -6,8 +6,7 @@ import { CalendarDays, Check, Eye, EyeOff, Plus, Trash2, X } from "lucide-react"
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { formatWhen, wallToIso } from "@/lib/datetime";
-import { createEvent, deleteEvent, saveEvent, setStage, setTimezone, type EventPatch } from "@/lib/actions/timeline";
-import { STAGE_LABELS } from "@/lib/types";
+import { createEvent, deleteEvent, saveEvent, setTimezone, type EventPatch } from "@/lib/actions/timeline";
 
 export type TimelineRow = EventPatch & { id: string };
 type Save = "idle" | "saving" | "saved" | "error";
@@ -31,7 +30,7 @@ function problem(r: TimelineRow, tz: string) {
   return null;
 }
 
-export function TimelineEditor({ initial, timezone, stage }: { initial: TimelineRow[]; timezone: string; stage: string }) {
+export function TimelineEditor({ initial, timezone }: { initial: TimelineRow[]; timezone: string }) {
   const router = useRouter();
   const [rows, setRows] = useState<TimelineRow[]>(sortRows(initial));
   const [save, setSave] = useState<Save>("idle");
@@ -106,15 +105,7 @@ export function TimelineEditor({ initial, timezone, stage }: { initial: Timeline
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 rounded-xl border border-border bg-card p-5 shadow-sm sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <label htmlFor="stage" className="text-sm font-medium">Current stage</label>
-          <select id="stage" defaultValue={stage} className={cn(box, "w-full")}
-            onChange={async (e) => { const r = await setStage(e.target.value); if (!r.ok) setError(r.error); else { setSave("saved"); router.refresh(); } }}>
-            {Object.entries(STAGE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-          </select>
-          <p className="text-xs text-muted-foreground">Controls the progress tracker students and staff see.</p>
-        </div>
+      <div className="grid gap-4 rounded-xl border border-border bg-card p-5 shadow-sm">
         <div className="space-y-1.5">
           <label htmlFor="tz" className="text-sm font-medium">Timezone</label>
           <input id="tz" list="tzs" value={tz} onChange={(e) => setTz(e.target.value)} className={cn(box, "w-full")}

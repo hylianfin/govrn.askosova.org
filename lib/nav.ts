@@ -42,6 +42,7 @@ export function adminNav(): NavItem[] {
     { href: "/admin/forms", label: "Forms", icon: "form", group: "Election setup" },
     { href: "/admin/forms/executive-team", label: "Executive Form", icon: "list", group: "Election setup" },
     { href: "/admin/forms/senate", label: "Senate Form", icon: "list", group: "Election setup" },
+    { href: "/admin/forms/import", label: "Import Responses", icon: "file", group: "Election setup" },
     { href: "/admin/users", label: "Users", icon: "users", group: "People & access" },
     { href: "/admin/roles", label: "Roles", icon: "shield", group: "People & access" },
     { href: "/admin/audit-logs", label: "Audit Logs", icon: "log", group: "System" },

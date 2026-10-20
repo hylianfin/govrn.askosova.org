@@ -9,14 +9,10 @@ import { formatDay, validTimezone } from "@/lib/datetime";
 
 export default async function ExecutiveTeamPage() {
   const supabase = await createClient();
-  const election = await getCurrentElection();
-
-  const { data: rules } = await supabase
-    .from("eligibility_rules")
-    .select("*")
-    .eq("scope", "executive")
-    .eq("is_active", true)
-    .order("display_order");
+  const [election, { data: rules }] = await Promise.all([
+    getCurrentElection(),
+    supabase.from("eligibility_rules").select("*").eq("scope", "executive").eq("is_active", true).order("display_order"),
+  ]);
 
   const events = election ? await getElectionEvents(election.id) : [];
   const tz = validTimezone(election?.timezone) ? election!.timezone : "UTC";

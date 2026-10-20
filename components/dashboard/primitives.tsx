@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Check, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Badge } from "@/components/ui/badge";
-import type { ApplicationStatus, ElectionStage } from "@/lib/types";
+import type { ApplicationStatus } from "@/lib/types";
+import { isPast, timelinePosition } from "@/lib/timeline";
 import { formatDay } from "@/lib/datetime";
 
 export function PageHeader({
@@ -91,43 +92,30 @@ export function StatusBadge({ status, label }: { status: string; label: string }
   return <Badge variant={statusVariant(status)}>{label}</Badge>;
 }
 
-const STAGE_TO_EVENT: Record<ElectionStage, number> = {
-  applications_not_open: -1,
-  applications_open: 0,
-  eligibility_review: 1,
-  campaign_preparation: 2,
-  official_campaign: 3,
-  debate_qa: 4,
-  election_silence: 5,
-  election_day: 6,
-  results_published: 7,
-  election_completed: 7,
-};
-
 interface TimelineEvent { id: string; title: string; start_at?: string | null; end_at?: string | null }
 
-export function StageTracker({ events, stage, timezone = "UTC" }: { events: TimelineEvent[]; stage?: ElectionStage | null; timezone?: string }) {
+export function StageTracker({ events, timezone = "UTC" }: { events: TimelineEvent[]; timezone?: string }) {
   const fmt = (d?: string | null) => formatDay(d, timezone);
   if (events.length === 0) return <EmptyState>The election timeline has not been configured yet.</EmptyState>;
-  const idx = stage ? (STAGE_TO_EVENT[stage] ?? -1) : -1;
-  const finished = idx >= events.length;
+  const pos = timelinePosition(events);
   return (
     <ol className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-7">
       {events.map((e, i) => {
-        const done = finished || i < idx;
-        const current = !finished && i === idx;
+        const current = i === pos.index && pos.state !== "done";
+        const done = pos.state === "done" || (!current && isPast(e));
         return (
-          <li key={e.id} aria-current={current ? "step" : undefined} className={cn("relative bg-card p-3", current && "bg-primary/5")}>
+          <li key={e.id} aria-current={current ? "step" : undefined} className={cn("relative bg-card p-3", current && (pos.state === "now" ? "bg-primary/5" : "bg-muted/60"))}>
             <div className="flex items-center gap-2">
               <span className={cn(
                 "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
                 done && "bg-success text-white",
-                current && "bg-primary text-primary-foreground ring-4 ring-primary/15",
+                current && pos.state === "now" && "bg-primary text-primary-foreground ring-4 ring-primary/15",
+                current && pos.state === "next" && "border-2 border-primary text-primary",
                 !done && !current && "bg-muted text-muted-foreground",
               )}>
                 {done ? <Check className="h-3.5 w-3.5" /> : i + 1}
               </span>
-              {current && <span className="text-[11px] font-semibold uppercase tracking-wide text-primary">Now</span>}
+              {current && <span className="text-[11px] font-semibold uppercase tracking-wide text-primary">{pos.state === "now" ? "Now" : "Up next"}</span>}
             </div>
             <p className={cn("mt-2 text-sm font-medium leading-snug", !done && !current && "text-muted-foreground")}>{e.title}</p>
             <p className="mt-0.5 text-xs text-muted-foreground">

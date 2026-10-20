@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { validTimezone } from "@/lib/datetime";
 import { PageHeader, Section, EmptyState, StageTracker, StatusBadge, LinkArrow } from "@/components/dashboard/primitives";
-import { STAGE_LABELS, STATUS_LABELS, type ApplicationStatus } from "@/lib/types";
+import { STATUS_LABELS, type ApplicationStatus } from "@/lib/types";
+import { timelinePosition } from "@/lib/timeline";
 
 type App = { id: string; kind: "executive_team" | "senate"; status: ApplicationStatus; executive_team_id: string | null };
 
@@ -55,7 +56,9 @@ export default async function DashboardPage() {
   const step = nextStep(exec, senate, !!teamId, pendingMembers);
 
   const firstName = (user?.profile?.full_name || user?.email || "").split(/[\s@]/)[0];
-  const stage = election?.current_stage as keyof typeof STAGE_LABELS | undefined;
+  const pos = timelinePosition(events);
+  const current = pos.state === "done" ? null : events[pos.index];
+  const stageBadge = pos.state === "done" ? "Election complete" : current ? `${pos.state === "now" ? "Now" : "Up next"}: ${current.title}` : null;
   const deadline = events.find((e: any) => /deadline|application/i.test(e.title))?.end_at;
 
   return (
@@ -64,7 +67,7 @@ export default async function DashboardPage() {
         eyebrow={election?.title}
         title={`Welcome back, ${firstName}`}
         description="Track the election, your applications and your team in one place."
-        actions={stage ? <Badge variant="default" className="px-3 py-1 text-sm">{STAGE_LABELS[stage]}</Badge> : undefined}
+        actions={stageBadge ? <Badge variant="default" className="px-3 py-1 text-sm">{stageBadge}</Badge> : undefined}
       />
 
       {step ? (
@@ -84,7 +87,7 @@ export default async function DashboardPage() {
       )}
 
       <Section title="Election progress" description={deadline ? `Applications close ${new Date(deadline).toLocaleString("en-GB", { dateStyle: "long", timeStyle: "short", timeZone: validTimezone(election?.timezone) ? election!.timezone : "UTC" })}` : undefined} action={<LinkArrow href="/election-timeline">Full timeline</LinkArrow>}>
-        <StageTracker events={events} stage={election?.current_stage} timezone={validTimezone(election?.timezone) ? election!.timezone : "UTC"} />
+        <StageTracker events={events} timezone={validTimezone(election?.timezone) ? election!.timezone : "UTC"} />
       </Section>
 
       <div className="grid gap-6 lg:grid-cols-3">
