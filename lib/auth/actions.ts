@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
 import { homeForRoles } from "@/lib/nav";
+import { getSiteUrl } from "@/lib/site-url";
 import type { Role } from "@/lib/types";
 
 const signInSchema = z.object({
@@ -56,7 +57,7 @@ export async function signUp(prevState: { error?: string; success?: string } | u
   const { error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
-    options: { data: { full_name: parsed.data.fullName } },
+    options: { data: { full_name: parsed.data.fullName }, emailRedirectTo: `${await getSiteUrl()}/auth/callback` },
   });
   if (error) return { error: error.message };
   return { success: "Check your email to confirm your account." };
