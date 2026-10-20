@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHeader, StatTile, Section } from "@/components/dashboard/primitives";
 import { ImportWizard, type ImportableForm } from "@/components/forms/import-wizard";
 import { ImportedList, type ImportedRow } from "@/components/forms/imported-list";
+import { suggestAccounts, type KnownAccount } from "@/lib/import-match";
 
 export default async function ImportResponsesPage() {
   const supabase = await createClient();
@@ -20,9 +21,20 @@ export default async function ImportResponsesPage() {
   const { data: imported } = await supabase.from("imported_responses")
     .select("id, kind, email, full_name, team_name, status, note, submitted_at, created_at, linked_at, linked_application_id, answers")
     .order("created_at", { ascending: false }).limit(500);
+  const needMatch = (imported ?? []).some((r: any) => r.status === "pending" && !r.email);
+  let accounts: KnownAccount[] = [];
+  if (needMatch) {
+    const [{ data: profs }, { data: confirmed }] = await Promise.all([
+      supabase.from("profiles").select("full_name, email").limit(2000),
+      supabase.rpc("confirmed_emails"),
+    ]);
+    const ok = new Set<string>((confirmed ?? []).map((c: any) => String(c.email ?? c).toLowerCase()));
+    accounts = (profs ?? []).map((p: any) => ({ name: p.full_name ?? "", email: p.email, confirmed: ok.has(String(p.email).toLowerCase()) }));
+  }
   const rows: ImportedRow[] = (imported ?? []).map((r: any) => ({
     id: r.id, kind: r.kind, email: r.email, name: r.full_name, teamName: r.team_name, status: r.status, note: r.note, submittedAt: r.submitted_at,
     importedAt: r.created_at, linkedAt: r.linked_at, applicationId: r.linked_application_id, answered: Object.keys(r.answers ?? {}).length,
+    suggestions: r.status === "pending" && !r.email ? suggestAccounts(r.full_name ?? "", accounts) : [],
   }));
   const n = (s: string) => rows.filter((r) => r.status === s).length;
 

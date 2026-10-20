@@ -6,7 +6,7 @@ import { isEmail, type ImportRow } from "@/lib/import";
 import type { FormQuestion } from "@/lib/types";
 
 export type ImportSummary = {
-  ok: true; imported: number; duplicates: number; skipped: { line: number; reason: string }[]; linkedNow: number;
+  ok: true; imported: number; withoutEmail: number; duplicates: number; skipped: { line: number; reason: string }[]; linkedNow: number;
 } | { ok: false; error: string };
 
 const MAX_ROWS = 1000;
@@ -47,8 +47,9 @@ export async function importResponses(kind: "executive_team" | "senate", rows: I
   const { data: qs } = await supabase.from("application_questions").select("id, type, options").eq("version_id", version.id);
   const questions = new Map<string, any>((qs ?? []).map((q: any) => [q.id, q]));
 
-  const { data: existing } = await supabase.from("imported_responses").select("email, submitted_at").eq("kind", kind);
-  const seen = new Set((existing ?? []).map((e: any) => `${String(e.email).toLowerCase()}|${e.submitted_at ? new Date(e.submitted_at).getTime() : 0}`));
+  const { data: existing } = await supabase.from("imported_responses").select("email, full_name, submitted_at").eq("kind", kind);
+  const who = (email: string | null, name: string | null) => (email ? `e:${email.toLowerCase()}` : `n:${(name ?? "").trim().toLowerCase()}`);
+  const seen = new Set((existing ?? []).map((e: any) => `${who(e.email, e.full_name)}|${e.submitted_at ? new Date(e.submitted_at).getTime() : 0}`));
 
   const batch = crypto.randomUUID();
   const skipped: { line: number; reason: string }[] = [];
@@ -57,11 +58,14 @@ export async function importResponses(kind: "executive_team" | "senate", rows: I
 
   rows.forEach((r, i) => {
     const line = i + 2; // spreadsheet line, header is line 1
-    const email = String(r.email ?? "").trim().toLowerCase();
-    if (!isEmail(email)) { skipped.push({ line, reason: email ? `“${email.slice(0, 60)}” is not a valid email` : "no email address" }); return; }
+    const rawEmail = String(r.email ?? "").trim().toLowerCase();
+    const name = String(r.name ?? "").trim().slice(0, 200);
+    // Without a usable email the response is kept by name, and staff attach an account to it afterwards.
+    const email = isEmail(rawEmail) ? rawEmail : "";
+    if (!email && !name) { skipped.push({ line, reason: rawEmail ? `“${rawEmail.slice(0, 60)}” is not a valid email and there is no name` : "no email and no name" }); return; }
     const at = r.submittedAt ? new Date(r.submittedAt) : null;
     const stamp = at && !Number.isNaN(at.getTime()) ? at.getTime() : 0;
-    const key = `${email}|${stamp}`;
+    const key = `${who(email || null, name)}|${stamp}`;
     if (seen.has(key)) { duplicates++; return; }
     seen.add(key);
 
@@ -79,8 +83,8 @@ export async function importResponses(kind: "executive_team" | "senate", rows: I
       if (me || m.name) members[pos] = { ...(me ? { email: me } : {}), ...(m.name ? { name: String(m.name).slice(0, 200) } : {}) };
     }
     insert.push({
-      batch_id: batch, kind, form_id: form.id, version_id: version.id, email,
-      full_name: String(r.name ?? "").trim().slice(0, 200) || null, submitted_at: stamp ? at!.toISOString() : null,
+      batch_id: batch, kind, form_id: form.id, version_id: version.id, email: email || null,
+      full_name: name || null, submitted_at: stamp ? at!.toISOString() : null,
       team_name: String(r.teamName ?? "").trim().slice(0, 200) || null, members, answers, raw: r.raw ?? null, imported_by: user.id,
     });
   });
@@ -97,7 +101,7 @@ export async function importResponses(kind: "executive_team" | "senate", rows: I
     await supabase.from("audit_logs").insert({ actor_id: user.id, action: "responses.imported", entity_type: kind, metadata: { batch, imported: insert.length, duplicates, linkedNow } });
   }
   revalidatePath("/admin/forms/import");
-  return { ok: true, imported: insert.length, duplicates, skipped, linkedNow };
+  return { ok: true, imported: insert.length, withoutEmail: insert.filter((r) => !r.email).length, duplicates, skipped, linkedNow };
 }
 
 export async function deleteImported(id: string): Promise<{ ok: boolean; error?: string }> {
@@ -114,6 +118,22 @@ export async function linkImportedNow(): Promise<{ ok: true; linked: number } | 
   if (!c) return { ok: false, error: "Only staff can do that." };
   const { data, error } = await c.supabase.rpc("link_all_imported_responses");
   if (error) return { ok: false, error: error.message };
+  revalidatePath("/admin/forms/import");
+  return { ok: true, linked: Number(data ?? 0) };
+}
+
+export async function assignImportedEmail(id: string, email: string): Promise<{ ok: true; linked: number } | { ok: false; error: string }> {
+  const c = await staff();
+  if (!c) return { ok: false, error: "Only staff can do that." };
+  const e = email.trim().toLowerCase();
+  if (!isEmail(e)) return { ok: false, error: "That is not a valid email address." };
+  const { data: row } = await c.supabase.from("imported_responses").select("id, kind, status, submitted_at, email").eq("id", id).maybeSingle();
+  if (!row) return { ok: false, error: "Response not found." };
+  if (row.status !== "pending") return { ok: false, error: "This response is already linked." };
+  const { error } = await c.supabase.from("imported_responses").update({ email: e }).eq("id", id).eq("status", "pending");
+  if (error) return { ok: false, error: /duplicate|unique/i.test(error.message) ? "That email already has a response from the same submission." : error.message };
+  await c.supabase.from("audit_logs").insert({ actor_id: c.user.id, action: "responses.email_assigned", entity_type: row.kind, entity_id: id });
+  const { data } = await c.supabase.rpc("link_all_imported_responses");
   revalidatePath("/admin/forms/import");
   return { ok: true, linked: Number(data ?? 0) };
 }

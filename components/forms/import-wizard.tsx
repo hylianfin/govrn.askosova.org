@@ -53,7 +53,9 @@ export function ImportWizard({ forms }: { forms: ImportableForm[] }) {
 
   const rows = useMemo(() => (headers.length ? buildRows(records, headers, mapping) : []), [records, headers, mapping]);
   const emailCols = mapping.filter((m) => m.type === "email").length;
-  const validRows = rows.filter((r) => isEmail(r.email)).length;
+  const validRows = rows.filter((r) => isEmail(r.email) || r.name.trim()).length;
+  const withoutEmail = rows.filter((r) => !isEmail(r.email) && r.name.trim()).length;
+  const nameCols = mapping.filter((m) => m.type === "name").length;
   const mappedQuestions = new Set(mapping.flatMap((m) => (m.type === "question" ? [m.id] : [])));
   const unmappedRequired = form.questions.filter((q) => q.required && !mappedQuestions.has(q.id));
   const dupQuestions = mapping.filter((m, i) => m.type === "question" && mapping.findIndex((x) => x.type === "question" && x.id === m.id) !== i).length;
@@ -101,7 +103,8 @@ export function ImportWizard({ forms }: { forms: ImportableForm[] }) {
         <section className="space-y-2 rounded-xl border border-success/40 bg-success/10 p-5 text-sm" role="status">
           <p className="flex items-center gap-2 font-semibold text-success"><CheckCircle2 className="h-5 w-5" /> Import finished</p>
           <ul className="list-disc space-y-1 pl-6">
-            <li><strong>{result.imported}</strong> responses saved. Each one waits for its person to sign up with that email.</li>
+            <li><strong>{result.imported}</strong> responses saved.{result.imported - result.withoutEmail > 0 ? " Those with an email wait for that person to sign up with it." : ""}</li>
+            {result.withoutEmail > 0 && <li><strong>{result.withoutEmail}</strong> have no email. Match each to an account in <em>Imported responses</em> below. If the person has already signed up, you&apos;ll see a suggestion.</li>}
             {result.linkedNow > 0 && <li><strong>{result.linkedNow}</strong> already had a confirmed account, so their application was created now.</li>}
             {result.duplicates > 0 && <li>{result.duplicates} were already imported earlier and were skipped.</li>}
             {result.skipped.length > 0 && (
@@ -115,7 +118,7 @@ export function ImportWizard({ forms }: { forms: ImportableForm[] }) {
         <section className="space-y-4 rounded-xl border border-border bg-card p-5 shadow-sm">
           <div>
             <h2 className="text-base font-semibold">2. Check how the columns match</h2>
-            <p className="text-sm text-muted-foreground">I matched columns to questions by their wording. Fix anything that is wrong. Exactly one column must be the person&apos;s <strong>Email</strong>, because that is how the response finds its owner.</p>
+            <p className="text-sm text-muted-foreground">I matched columns to questions by their wording. Fix anything that is wrong. Map the person&apos;s <strong>Email</strong> if your file has one, because that is how a response finds its owner. If it has none, map the <strong>Full name</strong> instead and you will attach each response to an account afterwards.</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[40rem] text-sm">
@@ -156,14 +159,16 @@ export function ImportWizard({ forms }: { forms: ImportableForm[] }) {
           </div>
 
           <div className="space-y-1 text-sm">
-            {emailCols !== 1 && <p className="flex items-center gap-1.5 text-danger"><AlertCircle className="h-4 w-4" />{emailCols === 0 ? "Choose which column is the Email." : "Only one column can be the Email."}</p>}
+            {emailCols > 1 && <p className="flex items-center gap-1.5 text-danger"><AlertCircle className="h-4 w-4" />Only one column can be the Email.</p>}
+            {emailCols === 0 && nameCols === 0 && <p className="flex items-center gap-1.5 text-danger"><AlertCircle className="h-4 w-4" />Choose which column is the Email or the Full name, so each response can be told apart.</p>}
+            {emailCols === 0 && nameCols > 0 && <p className="text-warning">This file has no email column. The responses will be saved by name, and you match each one to an account in the list below after importing.</p>}
             {dupQuestions > 0 && <p className="flex items-center gap-1.5 text-danger"><AlertCircle className="h-4 w-4" />Two columns are set to the same question.</p>}
             {unmappedRequired.length > 0 && <p className="text-warning">{unmappedRequired.length} required question{unmappedRequired.length > 1 ? "s have" : " has"} no column: {unmappedRequired.slice(0, 3).map((q) => `“${q.label.slice(0, 40)}”`).join(", ")}{unmappedRequired.length > 3 ? "…" : ""}. The applicant will have to fill {unmappedRequired.length > 1 ? "them" : "it"} in if staff ask for changes.</p>}
-            <p className="flex items-center gap-1.5 text-muted-foreground"><Users className="h-4 w-4" />{validRows} of {rows.length} responses have a valid email{validRows < rows.length ? ` (${rows.length - validRows} will be skipped)` : ""}.</p>
+            <p className="flex items-center gap-1.5 text-muted-foreground"><Users className="h-4 w-4" />{validRows} of {rows.length} responses can be imported{withoutEmail ? ` (${withoutEmail} by name only)` : ""}{validRows < rows.length ? `, ${rows.length - validRows} have neither a valid email nor a name and will be skipped` : ""}.</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <Button onClick={submit} disabled={pending || emailCols !== 1 || dupQuestions > 0 || validRows === 0}>
+            <Button onClick={submit} disabled={pending || emailCols > 1 || (emailCols === 0 && nameCols === 0) || dupQuestions > 0 || validRows === 0}>
               <Link2 className="h-4 w-4" /> {pending ? "Importing…" : `Import ${validRows} responses`}
             </Button>
             <p className="text-xs text-muted-foreground">Responses already imported are skipped, so it is safe to import the same file twice.</p>

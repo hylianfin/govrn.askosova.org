@@ -51,6 +51,8 @@ export function guessMapping(headers: string[], questions: Pick<FormQuestion, "i
   let emailTaken = false;
   return headers.map((h) => {
     const n = norm(h);
+    // Google adds "<question> [Score]", "[Feedback]" and "Total score" columns to quizzes; they are never answers.
+    if (/\[(score|feedback)\]\s*$/i.test(h.trim()) || n === "total score") return { type: "ignore" } as FieldTarget;
     if (n === "timestamp" || n === "submitted at" || n === "submission time") return { type: "timestamp" } as FieldTarget;
     if (!emailTaken && /(^| )e ?mail( address)?( |$)/.test(n) && !/(president|vice|secretary|treasur)/.test(n)) { emailTaken = true; return { type: "email" } as FieldTarget; }
     if (kind === "executive_team") {
@@ -58,7 +60,7 @@ export function guessMapping(headers: string[], questions: Pick<FormQuestion, "i
       if (pos && n.length < 40) return { type: /mail/.test(n) ? "member_email" : /name/.test(n) ? "member_name" : "member_email", position: pos } as FieldTarget;
       if (/team name|name of (your |the )?team/.test(n)) return { type: "team_name" } as FieldTarget;
     }
-    if (/^(full )?name$|^your name$|^student name$/.test(n)) return { type: "name" } as FieldTarget;
+    if (/^(full |your |student |first and last )?name( and (sur|last)name)?$|^name (and|&) (sur|last)name$|^(sur|last)name and name$/.test(n)) return { type: "name" } as FieldTarget;
     let best: { id: string; s: number } | null = null;
     for (const q of questions) {
       if (used.has(q.id)) continue;
