@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { validTimezone } from "@/lib/datetime";
 import { PageHeader, StatTile, Section, StageTracker, EmptyState, LinkArrow } from "@/components/dashboard/primitives";
 import { ReviewQueue } from "@/components/dashboard/review-queue";
+import { ElectionDayCard } from "@/components/counting/election-day-card";
 
 export default async function AdminOverviewPage() {
   const supabase = await createClient();
@@ -49,6 +50,8 @@ export default async function AdminOverviewPage() {
         <StatTile label="Senate applications" value={senateApps} icon={<FileText className="h-5 w-5" />} href="/staff/applications/senate" />
         <StatTile label="Pending review" value={pending} tone={pending ? "warning" : "success"} icon={<ClipboardCheck className="h-5 w-5" />} href="/staff/applications" />
       </div>
+
+      <ElectionDayCard base="/admin" />
 
       <Section title="Election progress" description="Follows the dates on the timeline automatically." action={<LinkArrow href="/admin/timeline">Edit timeline</LinkArrow>}>
         <StageTracker events={events} timezone={validTimezone(election?.timezone) ? election!.timezone : "UTC"} />

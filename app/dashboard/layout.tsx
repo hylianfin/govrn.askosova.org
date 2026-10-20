@@ -13,7 +13,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <DashboardShell
       title="Student"
-      nav={studentNav()}
+      nav={studentNav(user.roles)}
       userName={name}
       userEmail={user.email}
       roleLabel={user.roles.includes("executive_member") ? ROLE_LABELS.executive_member : ROLE_LABELS.student}

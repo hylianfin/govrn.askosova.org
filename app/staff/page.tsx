@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageHeader, StatTile, Section } from "@/components/dashboard/primitives";
 import { ReviewQueue } from "@/components/dashboard/review-queue";
+import { ElectionDayCard } from "@/components/counting/election-day-card";
 
 export default async function StaffOverviewPage() {
   const supabase = await createClient();
@@ -38,6 +39,8 @@ export default async function StaffOverviewPage() {
         <StatTile label="Executive teams" value={teams} hint={`${changes} with changes requested`} icon={<Users className="h-5 w-5" />} href="/staff/applications/executive-teams" />
         <StatTile label="Senate applicants" value={senate} icon={<Building2 className="h-5 w-5" />} href="/staff/applications/senate" />
       </div>
+
+      <ElectionDayCard base="/staff" />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2"><ReviewQueue /></div>

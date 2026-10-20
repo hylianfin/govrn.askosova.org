@@ -9,6 +9,7 @@ import { validTimezone } from "@/lib/datetime";
 import { PageHeader, Section, EmptyState, StageTracker, StatusBadge, LinkArrow } from "@/components/dashboard/primitives";
 import { STATUS_LABELS, type ApplicationStatus } from "@/lib/types";
 import { timelinePosition } from "@/lib/timeline";
+import { Vote } from "lucide-react";
 
 type App = { id: string; kind: "executive_team" | "senate"; status: ApplicationStatus; executive_team_id: string | null };
 
@@ -71,6 +72,20 @@ export default async function DashboardPage() {
         description="Track the election, your applications and your team in one place."
         actions={stageBadge ? <Badge variant="default" className="px-3 py-1 text-sm">{stageBadge}</Badge> : undefined}
       />
+
+      {user?.roles.includes("volunteer") && (
+        <div className="flex flex-col gap-4 rounded-xl border border-primary/20 bg-primary/5 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Vote className="h-4 w-4" /></div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary">Election day</p>
+              <p className="font-semibold">Polling desk</p>
+              <p className="text-sm text-muted-foreground">Check students in and hand out ballots.</p>
+            </div>
+          </div>
+          <Button asChild className="shrink-0"><Link href="/dashboard/polling-desk">Open the polling desk <ArrowRight className="h-4 w-4" /></Link></Button>
+        </div>
+      )}
 
       {foundImport && (
         <div className="flex flex-col gap-4 rounded-xl border border-warning/40 bg-warning/10 p-5 sm:flex-row sm:items-center sm:justify-between">

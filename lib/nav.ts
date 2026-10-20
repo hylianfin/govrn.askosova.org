@@ -6,13 +6,14 @@ export type NavIcon =
 
 export interface NavItem { href: string; label: string; icon: NavIcon; group?: string }
 
-export function studentNav(): NavItem[] {
+export function studentNav(roles: Role[] = []): NavItem[] {
   return [
     { href: "/dashboard", label: "Overview", icon: "home", group: "Home" },
     { href: "/dashboard/applications", label: "Applications", icon: "file", group: "Election" },
     { href: "/dashboard/team", label: "My Team", icon: "users", group: "Election" },
     { href: "/dashboard/campaign", label: "Campaign", icon: "megaphone", group: "Election" },
     { href: "/dashboard/volunteer", label: "Volunteer Tasks", icon: "volunteer", group: "Election" },
+    ...(roles.includes("volunteer") ? [{ href: "/dashboard/polling-desk", label: "Polling Desk", icon: "vote" as const, group: "Election" }] : []),
     { href: "/dashboard/notifications", label: "Notifications", icon: "bell", group: "Account" },
     { href: "/dashboard/profile", label: "Profile", icon: "user", group: "Account" },
   ];
@@ -29,7 +30,10 @@ export function staffNav(): NavItem[] {
     { href: "/staff/announcements", label: "Announcements", icon: "megaphone", group: "Operations" },
     { href: "/staff/volunteers", label: "Volunteers", icon: "volunteer", group: "Operations" },
     { href: "/staff/senate-members", label: "Senate Members", icon: "building", group: "Operations" },
-    { href: "/staff/election-results", label: "Election Results", icon: "trophy", group: "Operations" },
+    { href: "/staff/polling-desk", label: "Polling Desk", icon: "vote", group: "Election day" },
+    { href: "/staff/election-results", label: "Election Results", icon: "trophy", group: "Election day" },
+    { href: "/staff/ballot-history", label: "Ballot History", icon: "log", group: "Election day" },
+    { href: "/staff/practice", label: "Practice (sample data)", icon: "list", group: "Election day" },
   ];
 }
 
@@ -43,6 +47,11 @@ export function adminNav(): NavItem[] {
     { href: "/admin/forms/executive-team", label: "Executive Form", icon: "list", group: "Election setup" },
     { href: "/admin/forms/senate", label: "Senate Form", icon: "list", group: "Election setup" },
     { href: "/admin/forms/import", label: "Import Responses", icon: "file", group: "Election setup" },
+    { href: "/admin/polling-desk", label: "Polling Desk", icon: "vote", group: "Election day" },
+    { href: "/admin/election-results", label: "Election Results", icon: "trophy", group: "Election day" },
+    { href: "/admin/ballot-history", label: "Ballot History", icon: "log", group: "Election day" },
+    { href: "/admin/integrity", label: "Election Integrity", icon: "scale", group: "Election day" },
+    { href: "/admin/practice", label: "Practice (sample data)", icon: "list", group: "Election day" },
     { href: "/admin/users", label: "Users", icon: "users", group: "People & access" },
     { href: "/admin/roles", label: "Roles", icon: "shield", group: "People & access" },
     { href: "/admin/audit-logs", label: "Audit Logs", icon: "log", group: "System" },
@@ -67,6 +76,6 @@ export function consoleLinks(roles: Role[]) {
 export function navForRoles(roles: Role[]) {
   if (roles.includes("admin")) return { title: "Admin", nav: adminNav(), label: "Administrator" };
   if (roles.includes("staff_reviewer")) return { title: "Staff", nav: staffNav(), label: "Staff Reviewer" };
-  if (roles.includes("volunteer")) return { title: "Volunteer", nav: studentNav(), label: "Volunteer" };
+  if (roles.includes("volunteer")) return { title: "Volunteer", nav: studentNav(roles), label: "Volunteer" };
   return { title: "Student", nav: studentNav(), label: "Student" };
 }
