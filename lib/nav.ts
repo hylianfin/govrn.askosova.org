@@ -43,6 +43,7 @@ export function adminNav(): NavItem[] {
     { href: "/admin/elections", label: "Elections", icon: "vote", group: "Election setup" },
     { href: "/admin/timeline", label: "Timeline", icon: "calendar", group: "Election setup" },
     { href: "/admin/eligibility-rules", label: "Eligibility Rules", icon: "scale", group: "Election setup" },
+    { href: "/admin/candidates", label: "Candidates", icon: "users", group: "Election setup" },
     { href: "/admin/forms", label: "Forms", icon: "form", group: "Election setup" },
     { href: "/admin/forms/executive-team", label: "Executive Form", icon: "list", group: "Election setup" },
     { href: "/admin/forms/senate", label: "Senate Form", icon: "list", group: "Election setup" },
