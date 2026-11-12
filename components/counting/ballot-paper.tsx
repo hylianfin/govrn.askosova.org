@@ -32,9 +32,11 @@ export function BallotPaper({ race, selected, onToggle, disabled }: { race: Live
                   </span>
                   {exec ? (
                     <span>
-                      <span className="block text-4xl font-extrabold leading-none">{c.num}.</span>
+                      <span className="flex items-baseline gap-2">
+                        <span className="text-4xl font-extrabold leading-none">{c.num}.</span>
+                        <span className="text-lg font-extrabold uppercase leading-tight">{c.label}</span>
+                      </span>
                       <span className="mt-1.5 block text-[13px] leading-snug">
-                        {c.members.length === 0 && <b>{c.label}</b>}
                         {c.members.map((m) => (<span key={m.role} className="block">{ROLE_LABEL[m.role] ?? m.role}: <b>{m.name}</b></span>))}
                       </span>
                     </span>
