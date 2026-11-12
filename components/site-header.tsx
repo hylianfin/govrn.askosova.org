@@ -33,9 +33,6 @@ export async function SiteHeader({ signedIn = false }: { signedIn?: boolean }) {
             ) : (
               <>
                 <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex"><Link href="/sign-in">Sign In</Link></Button>
-                <Button asChild size="sm" className="bg-danger font-display uppercase tracking-wider hover:bg-danger/90">
-                  <Link href="/sign-up">Run for Office</Link>
-                </Button>
               </>
             )}
           </div>

@@ -40,21 +40,11 @@ export function staffNav(): NavItem[] {
 export function adminNav(): NavItem[] {
   return [
     { href: "/admin", label: "Overview", icon: "home", group: "Home" },
-    { href: "/admin/elections", label: "Elections", icon: "vote", group: "Election setup" },
-    { href: "/admin/timeline", label: "Timeline", icon: "calendar", group: "Election setup" },
-    { href: "/admin/eligibility-rules", label: "Eligibility Rules", icon: "scale", group: "Election setup" },
-    { href: "/admin/candidates", label: "Candidates", icon: "users", group: "Election setup" },
-    { href: "/admin/forms", label: "Forms", icon: "form", group: "Election setup" },
-    { href: "/admin/forms/executive-team", label: "Executive Form", icon: "list", group: "Election setup" },
-    { href: "/admin/forms/senate", label: "Senate Form", icon: "list", group: "Election setup" },
-    { href: "/admin/forms/import", label: "Import Responses", icon: "file", group: "Election setup" },
-    { href: "/admin/polling-desk", label: "Polling Desk", icon: "vote", group: "Election day" },
-    { href: "/admin/election-results", label: "Election Results", icon: "trophy", group: "Election day" },
-    { href: "/admin/ballot-history", label: "Ballot History", icon: "log", group: "Election day" },
-    { href: "/admin/integrity", label: "Election Integrity", icon: "scale", group: "Election day" },
-    { href: "/admin/practice", label: "Practice (sample data)", icon: "list", group: "Election day" },
-    { href: "/admin/users", label: "Users", icon: "users", group: "People & access" },
-    { href: "/admin/roles", label: "Roles", icon: "shield", group: "People & access" },
+    { href: "/admin/candidates", label: "Candidates", icon: "users", group: "Election" },
+    { href: "/admin/election-results", label: "Counting", icon: "trophy", group: "Election" },
+    { href: "/admin/integrity", label: "Totals & signatures", icon: "scale", group: "Election" },
+    { href: "/admin/ballot-history", label: "Ballot History", icon: "log", group: "Election" },
+    { href: "/admin/users", label: "Users", icon: "users", group: "System" },
     { href: "/admin/audit-logs", label: "Audit Logs", icon: "log", group: "System" },
     { href: "/admin/settings", label: "Settings", icon: "settings", group: "System" },
   ];
@@ -69,7 +59,6 @@ export function homeForRoles(roles: Role[]) {
 export function consoleLinks(roles: Role[]) {
   const links: { href: string; label: string }[] = [];
   if (roles.includes("admin")) links.push({ href: "/admin", label: "Admin console" });
-  if (roles.includes("admin")) links.push({ href: "/staff", label: "Review console" });
   return links;
 }
 

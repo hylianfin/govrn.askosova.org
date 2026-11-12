@@ -5,12 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 
 export const publicNav = [
-  { href: "/", label: "Home" },
-  { href: "/candidates", label: "Candidates" },
-  { href: "/executive-team", label: "Executive Team" },
-  { href: "/senate", label: "Student Senate" },
-  { href: "/election-timeline", label: "Timeline" },
-  { href: "/announcements", label: "News" },
+  { href: "/", label: "Candidates" },
 ];
 
 export function NavLinks({ mobile = false }: { mobile?: boolean }) {

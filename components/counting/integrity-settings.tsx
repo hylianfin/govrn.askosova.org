@@ -74,8 +74,8 @@ export function IntegritySettings({ api, initial, isAdmin }: { api: CountApi; in
               <div className="grid gap-4 p-5 sm:grid-cols-2">
                 <Field label={`${cfg.governmentLabel} ballots printed`} hint={`Paper ballots made for the ${cfg.governmentLabel} vote.`} value={f.printedGovernment} onChange={set("printedGovernment")} disabled={!isAdmin || s.locked} />
                 <Field label={`${cfg.senateLabel} ballots printed`} hint={`Paper ballots made for the ${cfg.senateLabel} vote.`} value={f.printedSenate} onChange={set("printedSenate")} disabled={!isAdmin || s.locked} />
-                <Field label="Ballots given to voters" hint={`Leave empty to use the polling-desk check-ins (${s.issuedAuto} so far).`} value={f.issued} onChange={set("issued")} disabled={!isAdmin || s.locked} />
-                <Field label="Registered to vote" hint={`Leave empty to use the students on the platform (${s.registeredAuto}).`} value={f.registered} onChange={set("registered")} disabled={!isAdmin || s.locked} />
+                <Field label="Signatures counted" hint="Voters who signed the voter list. Compared with the ballots counted." value={f.issued} onChange={set("issued")} disabled={!isAdmin || s.locked} />
+                <Field label="Total students" hint="Students who are allowed to vote at this school." value={f.registered} onChange={set("registered")} disabled={!isAdmin || s.locked} />
                 <label className="block space-y-1 sm:col-span-2">
                   <span className="text-sm font-medium">Note</span>
                   <input value={f.note} disabled={!isAdmin || s.locked} onChange={(e) => set("note")(e.target.value)} placeholder="For example: 20 spare ballots kept in the office" className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60" />

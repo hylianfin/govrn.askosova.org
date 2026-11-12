@@ -2,9 +2,7 @@ import Link from "next/link";
 import { getConfig } from "@/lib/config-server";
 
 const columns = [
-  { title: "The Race", links: [{ href: "/executive-team", label: "Executive Team" }, { href: "/senate", label: "Student Senate" }, { href: "/election-timeline", label: "Election Timeline" }, { href: "/announcements", label: "News" }] },
-  { title: "Get Involved", links: [{ href: "/dashboard/applications/executive-team", label: "Executive Application" }, { href: "/dashboard/applications/senate", label: "Senate Application" }, { href: "/dashboard/campaign", label: "Campaign" }, { href: "/dashboard/volunteer", label: "Volunteer" }] },
-  { title: "Account", links: [{ href: "/sign-in", label: "Sign In" }, { href: "/sign-up", label: "Create Account" }, { href: "/dashboard/notifications", label: "Notifications" }, { href: "/dashboard/profile", label: "Profile" }] },
+  { title: "Account", links: [{ href: "/sign-in", label: "Sign In" }] },
 ];
 
 export async function SiteFooter() {
@@ -24,7 +22,7 @@ export async function SiteFooter() {
               </div>
             </Link>
             <p className="mt-4 max-w-sm text-sm text-white/70">
-              Applications, eligibility, campaigns and results for the {c.organizationName} {c.tagline.toLowerCase() || "election"}.
+              The candidates in the {c.organizationName} {c.tagline.toLowerCase() || "election"}.
             </p>
           </div>
           {columns.map((c) => (
