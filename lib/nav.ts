@@ -41,6 +41,7 @@ export function adminNav(): NavItem[] {
   return [
     { href: "/admin", label: "Overview", icon: "home", group: "Home" },
     { href: "/admin/candidates", label: "Candidates", icon: "users", group: "Election" },
+    { href: "/admin/announcements", label: "Announcements", icon: "megaphone", group: "Election" },
     { href: "/admin/election-results", label: "Counting", icon: "trophy", group: "Election" },
     { href: "/admin/integrity", label: "Totals & signatures", icon: "scale", group: "Election" },
     { href: "/admin/ballot-history", label: "Ballot History", icon: "log", group: "Election" },
