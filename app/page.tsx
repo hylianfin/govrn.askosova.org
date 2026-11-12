@@ -27,19 +27,43 @@ export default async function HomePage() {
         {races.map((r) => (
           <section key={r.race}>
             <h2 className="border-b-2 border-navy pb-2 font-display text-2xl font-bold uppercase text-navy">{raceLabel(config, r.race)}</h2>
-            <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-              {r.candidates.map((c) => (
-                <li key={c.num} className="flex gap-4 rounded-xl border border-border bg-card p-4">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-navy font-display text-lg font-bold text-white">{c.num}</span>
-                  <div className="min-w-0">
-                    <p className="font-display text-lg font-semibold uppercase leading-tight text-navy">{c.label}</p>
-                    {c.members.length > 0
-                      ? <ul className="mt-1 space-y-0.5 text-sm text-muted-foreground">{c.members.map((m) => <li key={m.role}>{ROLE[m.role] ?? m.role}: <span className="font-medium text-foreground">{m.name}</span></li>)}</ul>
-                      : c.sub && <p className="mt-0.5 text-sm text-muted-foreground">{c.sub}</p>}
-                  </div>
-                </li>
-              ))}
-            </ul>
+            {r.kind === "exec" ? (
+              <div className="mt-4 overflow-x-auto rounded-xl border border-border bg-card">
+                <table className="w-full min-w-[640px] text-left text-sm">
+                  <thead className="bg-navy font-display text-xs uppercase tracking-wider text-white">
+                    <tr>
+                      <th className="px-4 py-3 w-14">No.</th><th className="px-4 py-3">Team</th>
+                      {Object.values(ROLE).map((x) => <th key={x} className="px-4 py-3">{x}</th>)}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {r.candidates.map((c) => (
+                      <tr key={c.num}>
+                        <td className="px-4 py-3 font-display text-xl font-bold text-danger">{c.num}</td>
+                        <td className="px-4 py-3 font-display text-base font-semibold uppercase text-navy">{c.label}</td>
+                        {Object.keys(ROLE).map((k) => <td key={k} className="px-4 py-3">{c.members.find((m) => m.role === k)?.name ?? ""}</td>)}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="mt-4 overflow-x-auto rounded-xl border border-border bg-card">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-navy font-display text-xs uppercase tracking-wider text-white">
+                    <tr><th className="px-4 py-3 w-14">No.</th><th className="px-4 py-3">Name</th></tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {r.candidates.map((c) => (
+                      <tr key={c.num}>
+                        <td className="px-4 py-2.5 font-display text-lg font-bold text-danger">{c.num}</td>
+                        <td className="px-4 py-2.5 font-medium">{c.label}{c.sub ? <span className="ml-2 text-muted-foreground">{c.sub}</span> : null}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </section>
         ))}
       </main>

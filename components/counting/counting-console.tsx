@@ -249,7 +249,7 @@ export function CountingConsole({ api, initial, isAdmin, base = "/staff", alerts
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow={isAdmin ? "Admin console" : "Review console"}
+        eyebrow="Admin console"
         title="Count the ballots"
         description="Take one paper ballot at a time, mark the numbers on it, and record it."
         actions={
@@ -288,7 +288,7 @@ export function CountingConsole({ api, initial, isAdmin, base = "/staff", alerts
         <section className="rounded-xl border-2 border-danger/50 bg-card shadow-sm">
           <header className="border-b border-border px-5 py-4">
             <h2 className="flex items-center gap-2 text-base font-semibold text-danger"><AlertTriangle className="h-5 w-5" /> The count cannot be closed yet</h2>
-            <p className="mt-1 text-sm text-muted-foreground">The ballots counted do not match the ballots printed, issued or registered. Every admin has been notified. Check the ballot history, then recount the race or repeat the election.</p>
+            <p className="mt-1 text-sm text-muted-foreground">The ballots counted do not match the ballots printed, signed for or total students. Every admin has been notified. Check the ballot history, then recount the race or repeat the election.</p>
           </header>
           <div className="space-y-4 p-5">
             <ReconciliationReport rec={blocked.rec} />
@@ -306,7 +306,7 @@ export function CountingConsole({ api, initial, isAdmin, base = "/staff", alerts
       )}
 
       {live.races.length === 0 ? (
-        <EmptyState>No approved candidates yet. Races appear here once applications are approved.</EmptyState>
+        <EmptyState>No candidates yet. <Link href="/admin/candidates" className="font-medium text-primary underline-offset-4 hover:underline">Add them on the Candidates page</Link>, then come back to count.</EmptyState>
       ) : (
         <>
           <div className="grid gap-3 md:grid-cols-2">
@@ -326,7 +326,7 @@ export function CountingConsole({ api, initial, isAdmin, base = "/staff", alerts
                       <p className="font-semibold">{schoolName(sc)}</p>
                       <p className="mt-0.5 text-xs text-muted-foreground">last ballot {ago(last, now)}</p>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        Printed {rs.find((r) => r.kind === "exec")?.printed ?? "–"} / {rs.find((r) => r.kind === "senate")?.printed ?? "–"} · Registered {rs[0]?.registered ?? "–"}
+                        Printed {rs.find((r) => r.kind === "exec")?.printed ?? "–"} / {rs.find((r) => r.kind === "senate")?.printed ?? "–"} · Students {rs[0]?.registered ?? "–"}
                       </p>
                     </div>
                     <p className="text-2xl font-semibold tabular-nums leading-none">{counted}{issued != null && <span className="text-base text-muted-foreground"> / {issued}</span>}</p>
@@ -392,7 +392,7 @@ export function CountingConsole({ api, initial, isAdmin, base = "/staff", alerts
                 <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
                   <div className="flex items-end justify-between gap-4">
                     <div>
-                      <p className="flex items-center gap-2 text-sm text-muted-foreground">Ballots counted{race.issued != null ? " / issued" : ""}<span className="inline-flex items-center gap-1 text-xs"><span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse-ring" /> everyone counting, live · synced {ago(new Date(syncedAt).toISOString(), now)}</span></p>
+                      <p className="flex items-center gap-2 text-sm text-muted-foreground">Ballots counted{race.issued != null ? " / signatures" : ""}<span className="inline-flex items-center gap-1 text-xs"><span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse-ring" /> everyone counting, live · synced {ago(new Date(syncedAt).toISOString(), now)}</span></p>
                       <p className="text-4xl font-semibold tabular-nums tracking-tight">{counted}{race.issued != null && <span className="text-muted-foreground"> / {race.issued}</span>}</p>
                     </div>
                     <div className="text-right text-sm text-muted-foreground">

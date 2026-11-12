@@ -20,7 +20,7 @@ function Field({ label, hint, value, onChange, disabled }: { label: string; hint
   return (
     <label className="block space-y-1">
       <span className="text-sm font-medium">{label}</span>
-      <input type="number" min={0} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)} placeholder="Not set" className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm tabular-nums placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60" />
+      <input type="number" inputMode="numeric" min={0} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)} placeholder="Not set" className="flex h-11 w-full rounded-md border border-input bg-background px-3 text-base tabular-nums placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60" />
       <span className="block text-xs text-muted-foreground">{hint}</span>
     </label>
   );
@@ -65,22 +65,24 @@ export function IntegritySettings({ api, initial, isAdmin }: { api: CountApi; in
             ps != null && issued > ps ? `More ${cfg.senateLabel} ballots given (${issued}) than printed (${ps}).` : null,
             issued > reg ? `More ballots given (${issued}) than registered voters (${reg}).` : null,
           ].filter(Boolean) as string[];
+          const dirty = JSON.stringify(f) !== JSON.stringify(toForm(s));
           return (
             <section key={s.school} className="rounded-xl border border-border bg-card shadow-sm">
               <header className="flex items-center justify-between border-b border-border px-5 py-4">
                 <h2 className="text-base font-semibold">{schoolName(s.school)}</h2>
                 {s.locked && <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Lock className="h-3.5 w-3.5" /> Locked, the election has ended</span>}
               </header>
-              <div className="grid gap-4 p-5 sm:grid-cols-2">
+              <form id={`integrity-${s.school}`} onSubmit={(e) => { e.preventDefault(); if (dirty && isAdmin && !s.locked) save(s); }} className="grid gap-4 p-5 sm:grid-cols-2">
+                <Field label="Total students" hint="Students who are allowed to vote at this school." value={f.registered} onChange={set("registered")} disabled={!isAdmin || s.locked} />
+                <Field label="Signatures counted" hint="Voters who signed the voter list. Compared with the ballots counted." value={f.issued} onChange={set("issued")} disabled={!isAdmin || s.locked} />
                 <Field label={`${cfg.governmentLabel} ballots printed`} hint={`Paper ballots made for the ${cfg.governmentLabel} vote.`} value={f.printedGovernment} onChange={set("printedGovernment")} disabled={!isAdmin || s.locked} />
                 <Field label={`${cfg.senateLabel} ballots printed`} hint={`Paper ballots made for the ${cfg.senateLabel} vote.`} value={f.printedSenate} onChange={set("printedSenate")} disabled={!isAdmin || s.locked} />
-                <Field label="Signatures counted" hint="Voters who signed the voter list. Compared with the ballots counted." value={f.issued} onChange={set("issued")} disabled={!isAdmin || s.locked} />
-                <Field label="Total students" hint="Students who are allowed to vote at this school." value={f.registered} onChange={set("registered")} disabled={!isAdmin || s.locked} />
                 <label className="block space-y-1 sm:col-span-2">
                   <span className="text-sm font-medium">Note</span>
                   <input value={f.note} disabled={!isAdmin || s.locked} onChange={(e) => set("note")(e.target.value)} placeholder="For example: 20 spare ballots kept in the office" className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60" />
                 </label>
-              </div>
+                {num(f.issued) != null && reg > 0 && <p className="text-sm text-muted-foreground sm:col-span-2">Signatures are <b className="text-foreground">{Math.round((issued / reg) * 100)}%</b> of the students ({issued} of {reg}).</p>}
+              </form>
               {warnings.length > 0 && (
                 <ul className="mx-5 mb-4 space-y-1 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm">
                   {warnings.map((w) => <li key={w} className="flex items-start gap-2"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />{w}</li>)}
@@ -88,7 +90,7 @@ export function IntegritySettings({ api, initial, isAdmin }: { api: CountApi; in
               )}
               <footer className="flex items-center justify-between gap-3 border-t border-border px-5 py-3">
                 <p className="text-xs text-muted-foreground">{s.updatedAt ? `Last saved ${new Date(s.updatedAt).toLocaleString("en-GB")}. Every change is written to the audit log.` : "Not saved yet."}</p>
-                {isAdmin && <Button size="sm" disabled={s.locked || saving === s.school} onClick={() => save(s)}>Save</Button>}
+                {isAdmin && <Button size="sm" disabled={s.locked || !dirty || saving === s.school} onClick={() => save(s)}>{saving === s.school ? "Saving…" : dirty ? "Save changes" : "Saved"}</Button>}
               </footer>
             </section>
           );
