@@ -481,8 +481,8 @@ export function CountingConsole({ api, initial, isAdmin, base = "/staff", alerts
                 <div className="flex flex-wrap items-center gap-3">
                   {!race.confirmed && counting && (
                     <>
-                      <Button variant="outline" disabled={race.countedByMe || counted === 0} onClick={() => run(() => api.confirm(race.race), "Count confirmed.")}><UserCheck className="h-4 w-4" /> Confirm this count</Button>
-                      <p className="text-xs text-muted-foreground">{counted === 0 ? "Nothing counted yet." : race.countedByMe ? "You entered the last ballot. A different staff member must confirm." : "Check the totals against the paper ballots, then confirm."}</p>
+                      <Button variant="outline" disabled={counted === 0} onClick={() => run(() => api.confirm(race.race), "Count confirmed.")}><UserCheck className="h-4 w-4" /> Confirm this count</Button>
+                      <p className="text-xs text-muted-foreground">{counted === 0 ? "Nothing counted yet." : "Check the totals against the paper ballots, then confirm."}</p>
                     </>
                   )}
                   {race.confirmed && (
