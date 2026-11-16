@@ -12,7 +12,7 @@ import { BallotPaper } from "@/components/counting/ballot-paper";
 import { ReconciliationReport } from "@/components/counting/reconciliation-report";
 import type { CountApi } from "@/components/counting/api";
 import { useLabels } from "@/components/config-provider";
-import { ballotFlags, raceBallots, type BallotKind, type ChainStatus, type LiveRace, type LiveState, type Reconciliation, type School } from "@/lib/live";
+import { ballotFlags, raceBallots, senateMarks, type BallotKind, type ChainStatus, type LiveRace, type LiveState, type Reconciliation, type School } from "@/lib/live";
 
 export interface ConsoleAlert { id: string; title: string; body: string | null }
 
@@ -401,6 +401,12 @@ export function CountingConsole({ api, initial, isAdmin, base = "/staff", alerts
                     </div>
                   </div>
                   {race.issued != null && <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min(100, race.issued ? (counted / race.issued) * 100 : 0)}%` }} /></div>}
+                  {race.kind === "senate" && race.maxChoices > 1 && (
+                    <p className="mt-3 text-sm text-muted-foreground">
+                      Votes marked: <span className="font-semibold tabular-nums text-foreground">{senateMarks(race)}</span>
+                      {race.issued != null ? <> of at most <span className="tabular-nums">{race.maxChoices} × {race.issued} signatures = {race.maxChoices * race.issued}</span></> : <> (each ballot allows up to {race.maxChoices}; enter the signatures in Totals to check the total)</>}
+                    </p>
+                  )}
                   {ballotFlags(race).map((f) => <p key={f.text} className="mt-3 flex items-center gap-2 text-sm text-danger"><AlertTriangle className="h-4 w-4" /> {f.text}</p>)}
                 </section>
 

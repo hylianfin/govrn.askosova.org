@@ -92,5 +92,13 @@ export function ballotFlags(r: LiveRace) {
   if (r.issued != null && counted > r.issued) out.push({ tone: "danger", text: `${counted - r.issued} more ballots counted than issued` });
   if (r.issued != null && r.printed != null && r.issued > r.printed) out.push({ tone: "danger", text: `${r.issued - r.printed} more ballots issued than printed` });
   if (r.registered > 0 && counted > r.registered) out.push({ tone: "danger", text: "More ballots than registered voters" });
+  if (r.kind === "senate" && r.maxChoices > 1) {
+    const marks = senateMarks(r);
+    if (marks > r.maxChoices * r.valid) out.push({ tone: "danger", text: `${marks} votes on ${r.valid} valid ballots: more than ${r.maxChoices} per ballot` });
+    if (r.issued != null && marks > r.maxChoices * r.issued) out.push({ tone: "danger", text: `${marks} votes, but ${r.issued} signatures allow at most ${r.maxChoices * r.issued}. Something may have been tampered with` });
+  }
   return out;
 }
+
+// Total marks on valid ballots in a multi-vote race (for the Senate each ballot allows up to maxChoices).
+export const senateMarks = (r: LiveRace) => r.candidates.reduce((n, c) => n + c.votes, 0);
