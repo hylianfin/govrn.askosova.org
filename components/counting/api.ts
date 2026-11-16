@@ -23,6 +23,16 @@ export interface CountApi {
   saveIntegrity(s: { school: string; printedGovernment: number | null; printedSenate: number | null; issued: number | null; registered: number | null; note: string | null }): Promise<void>;
 }
 
+// Each laptop gets its own id, kept in the browser, so two laptops on one account never undo each other's ballots.
+function deviceId(): string {
+  try {
+    let id = localStorage.getItem("ask-count-device");
+    if (!id) { id = crypto.randomUUID(); localStorage.setItem("ask-count-device", id); }
+    return id;
+  } catch { return "tab-" + (globalThis as { __askTab?: string }).__askTab; }
+}
+if (typeof window !== "undefined") (window as unknown as { __askTab?: string }).__askTab ??= crypto.randomUUID();
+
 // Talks to Supabase straight from the browser, so ballots entered quickly are not queued behind each other like server actions would be.
 export function createCountApi(): CountApi {
   const supabase = createClient();
@@ -41,8 +51,8 @@ export function createCountApi(): CountApi {
       return () => { supabase.removeChannel(channel); };
     },
     poll: async () => ((await call("live_results")) as LiveState | null) ?? EMPTY_LIVE,
-    record: async (race, kind, choices) => { await call("record_ballot", { p_race: race, p_kind: kind, p_choices: choices }); },
-    undo: async (race) => { await call("undo_ballot", { p_race: race }); },
+    record: async (race, kind, choices) => { await call("record_ballot", { p_race: race, p_kind: kind, p_choices: choices, p_device: deviceId(), p_ref: crypto.randomUUID() }); },
+    undo: async (race) => { await call("undo_ballot", { p_race: race, p_device: deviceId() }); },
     confirm: async (race) => { await call("confirm_race", { p_race: race }); },
     reopen: async (race) => { await call("reopen_race", { p_race: race }); },
     setStatus: async (status, reason) => {
