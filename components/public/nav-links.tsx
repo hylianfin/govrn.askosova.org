@@ -6,6 +6,7 @@ import { cn } from "@/lib/cn";
 
 export const publicNav = [
   { href: "/", label: "Candidates" },
+  { href: "/vote", label: "Vote" },
 ];
 
 export function NavLinks({ mobile = false }: { mobile?: boolean }) {

@@ -12,7 +12,6 @@ const nextConfig: NextConfig = {
     const to = (sources: string[], destination: string) => sources.map((source) => ({ source, destination, permanent: false }));
     return [
       ...to(["/executive-team", "/senate", "/election-timeline", "/announcements", "/candidates"], "/"),
-      ...to(["/sign-up"], "/sign-in"),
       ...to(["/dashboard/:path+"], "/"),
       ...to(["/staff/:path*"], "/admin"),
       ...to(["/admin/elections", "/admin/timeline", "/admin/eligibility-rules", "/admin/forms/:path*", "/admin/polling-desk", "/admin/practice", "/admin/roles"], "/admin"),

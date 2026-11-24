@@ -3,7 +3,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { supabaseUrl, supabaseAnonKey } from "@/lib/supabase/env";
 
 const PROTECTED_PREFIXES = ["/dashboard", "/staff", "/admin"];
-const AUTH_ONLY = ["/sign-in", "/sign-up"];
+// Keep sign-up reachable so a user can register a different school account.
+// Signed-in users are still redirected away from the sign-in screen.
+const AUTH_ONLY = ["/sign-in"];
 
 export async function proxy(request: NextRequest) {
   const url = supabaseUrl();

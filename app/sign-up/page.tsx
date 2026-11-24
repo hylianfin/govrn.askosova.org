@@ -56,7 +56,22 @@ export default function SignUpPage() {
           placeholder={`name@${domains[0] ?? "school.org"}`}
           hint={domains.length ? `Any ${domains.map((d) => "@" + d).join(" or ")} address works.` : "Use your school email."}
         />
-        <PasswordField icon={Lock} required minLength={8} autoComplete="new-password" hint="At least 8 characters." />
+        <PasswordField
+          icon={Lock}
+          required
+          minLength={8}
+          autoComplete="new-password"
+          hint="Use at least 8 characters, including a letter and a number."
+        />
+        <PasswordField
+          id="confirmPassword"
+          label="Confirm password"
+          icon={Lock}
+          required
+          minLength={8}
+          autoComplete="new-password"
+          hint="Enter the same password again."
+        />
         <AuthError message={state?.error} />
         <Button
           type="submit"

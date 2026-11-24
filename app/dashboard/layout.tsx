@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { studentNav, homeForRoles } from "@/lib/nav";
+import { getGovAccess } from "@/lib/queries/government";
 import { ROLE_LABELS } from "@/lib/types";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -10,6 +11,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const home = homeForRoles(user.roles);
   if (home !== "/dashboard") redirect(home);
   const name = user.profile?.full_name || user.email;
+  // People who hold a seat in student government get a way into the Government console.
+  const access = await getGovAccess();
   return (
     <DashboardShell
       title="Student"
@@ -17,6 +20,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       userName={name}
       userEmail={user.email}
       roleLabel={user.roles.includes("executive_member") ? ROLE_LABELS.executive_member : ROLE_LABELS.student}
+      switchLinks={access?.seat ? [{ href: "/government", label: "Government console" }] : []}
     >
       {children}
     </DashboardShell>

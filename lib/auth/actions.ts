@@ -38,17 +38,26 @@ export async function signIn(prevState: { error?: string } | undefined, formData
 
 const signUpSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(8),
-  fullName: z.string().min(2),
+  password: z
+    .string()
+    .min(8, "Your password must be at least 8 characters.")
+    .regex(/[a-zA-Z]/, "Your password must include a letter.")
+    .regex(/[0-9]/, "Your password must include a number."),
+  confirmPassword: z.string(),
+  fullName: z.string().trim().min(2),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match.",
+  path: ["confirmPassword"],
 });
 
 export async function signUp(prevState: { error?: string; success?: string } | undefined, formData: FormData) {
   const parsed = signUpSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
     fullName: formData.get("fullName"),
   });
-  if (!parsed.success) return { error: "Please check your details and try again." };
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Please check your details and try again." };
   const domain = parsed.data.email.toLowerCase().split("@").pop() ?? "";
   const { emailDomains } = await getConfig();
   if (emailDomains.length > 0 && !emailDomains.some((d) => domain === d.toLowerCase() || domain.endsWith("." + d.toLowerCase()))) {

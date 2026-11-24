@@ -12,6 +12,7 @@ export function studentNav(roles: Role[] = []): NavItem[] {
     { href: "/dashboard/applications", label: "Applications", icon: "file", group: "Election" },
     { href: "/dashboard/team", label: "My Team", icon: "users", group: "Election" },
     { href: "/dashboard/campaign", label: "Campaign", icon: "megaphone", group: "Election" },
+    { href: "/vote", label: "Student Votes", icon: "vote", group: "Election" },
     { href: "/dashboard/volunteer", label: "Volunteer Tasks", icon: "volunteer", group: "Election" },
     ...(roles.includes("volunteer") ? [{ href: "/dashboard/polling-desk", label: "Polling Desk", icon: "vote" as const, group: "Election" }] : []),
     { href: "/dashboard/notifications", label: "Notifications", icon: "bell", group: "Account" },
@@ -45,9 +46,21 @@ export function adminNav(): NavItem[] {
     { href: "/admin/election-results", label: "Counting", icon: "trophy", group: "Election" },
     { href: "/admin/integrity", label: "Totals & signatures", icon: "scale", group: "Election" },
     { href: "/admin/ballot-history", label: "Ballot History", icon: "log", group: "Election" },
+    { href: "/admin/attendance", label: "Attendance", icon: "calendar", group: "Election" },
     { href: "/admin/users", label: "Users", icon: "users", group: "System" },
     { href: "/admin/audit-logs", label: "Audit Logs", icon: "log", group: "System" },
     { href: "/admin/settings", label: "Settings", icon: "settings", group: "System" },
+  ];
+}
+
+// Student government: meetings, the roster and the secretary's records.
+export function governmentNav(): NavItem[] {
+  return [
+    { href: "/government", label: "Overview", icon: "home", group: "Home" },
+    { href: "/government/meetings", label: "Meetings", icon: "calendar", group: "Operations" },
+    { href: "/government/members", label: "Members", icon: "users", group: "Operations" },
+    { href: "/government/actions", label: "Action items", icon: "list", group: "Operations" },
+    { href: "/government/treasury", label: "Treasury", icon: "list", group: "Operations" },
   ];
 }
 
@@ -56,10 +69,13 @@ export function homeForRoles(roles: Role[]) {
   return "/dashboard";
 }
 
-// Administrators use both consoles: Admin (setup) and Review (applications and election day).
+// Administrators use both consoles: Admin (setup) and Government (meetings, members, minutes).
 export function consoleLinks(roles: Role[]) {
   const links: { href: string; label: string }[] = [];
-  if (roles.includes("admin")) links.push({ href: "/admin", label: "Admin console" });
+  if (roles.includes("admin")) {
+    links.push({ href: "/admin", label: "Admin console" });
+    links.push({ href: "/government", label: "Government console" });
+  }
   return links;
 }
 

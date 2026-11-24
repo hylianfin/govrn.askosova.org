@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/dashboard/primitives";
 import { ConfigForm } from "@/components/admin/config-form";
+import { ElectionControls } from "@/components/admin/election-controls";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,7 @@ export default async function AdminSettingsPage() {
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="System" title="Settings" description="Set up the platform for your school without changing any code. Use it again next year, or for another school." />
+      {election && <ElectionControls enabled={election.is_enabled ?? true} disabledReason={election.disabled_reason} />}
       <ConfigForm initial={config} locked={(ballots ?? 0) > 0} />
       <Card>
         <CardHeader><CardTitle>Timezone</CardTitle></CardHeader>

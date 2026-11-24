@@ -39,6 +39,11 @@ export default function SignInPage() {
           {pending ? "Signing in…" : (<>Sign in <ArrowRight className="h-4 w-4" aria-hidden /></>)}
         </Button>
       </form>
+
+      <p className="mt-8 text-center text-sm text-muted-foreground">
+        Don&apos;t have an account?{" "}
+        <Link href="/sign-up" className="font-semibold text-primary underline-offset-4 hover:underline">Sign up</Link>
+      </p>
     </AuthShell>
   );
 }

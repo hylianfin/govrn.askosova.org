@@ -200,6 +200,8 @@ export function CountingConsole({ api, initial, isAdmin, base = "/staff", alerts
 
   const toggle = (id: string) => {
     if (!race || !canEdit) return;
+    // A removed candidate keeps its number but has no name; it cannot be marked.
+    if (race.candidates.find((c) => c.id === id)?.label === "—") { toast.error("This candidate was removed. It cannot be marked."); return; }
     setSelected((s) => {
       if (s.includes(id)) return s.filter((x) => x !== id);
       if (race.maxChoices === 1) return [id];
@@ -420,7 +422,7 @@ export function CountingConsole({ api, initial, isAdmin, base = "/staff", alerts
                       const on = selected.includes(c.id);
                       return (
                         <button
-                          key={c.id} type="button" disabled={!canEdit} onClick={() => toggle(c.id)} aria-pressed={on} title={c.label}
+                          key={c.id} type="button" disabled={!canEdit || c.label === "—"} onClick={() => toggle(c.id)} aria-pressed={on} title={c.label}
                           className={cn("h-14 rounded-lg border-2 text-lg font-semibold tabular-nums transition-colors disabled:cursor-not-allowed disabled:opacity-60", on ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:border-primary/50 hover:bg-muted")}
                         >
                           {c.num}

@@ -9,7 +9,7 @@ async function ctx() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data: election } = await supabase.from("elections").select("id").order("created_at", { ascending: false }).limit(1).maybeSingle();
+  const { data: election } = await supabase.from("elections").select("id, is_enabled").order("created_at", { ascending: false }).limit(1).maybeSingle();
   return election ? { supabase, user, electionId: election.id as string } : null;
 }
 
@@ -22,6 +22,8 @@ export async function searchStudents(q: string): Promise<Student[]> {
 export async function issueBallot(studentId: string): Promise<PollingResult> {
   const c = await ctx();
   if (!c) return { ok: false, error: "No election is configured." };
+  const { data: election } = await c.supabase.from("elections").select("is_enabled, disabled_reason").eq("id", c.electionId).maybeSingle();
+  if (election?.is_enabled === false) return { ok: false, error: election.disabled_reason ? `Check-in is paused: ${election.disabled_reason}` : "Check-in is currently paused by an administrator." };
   const { error } = await c.supabase.from("ballot_checkins").insert({ election_id: c.electionId, student_id: studentId, issued_by: c.user.id });
   if (error) return { ok: false, error: error.code === "23505" ? "This student already received a ballot." : "Could not record the check-in." };
   ["/staff/polling-desk", "/admin/polling-desk", "/dashboard/polling-desk", "/staff/election-results", "/admin/election-results"].forEach((p) => revalidatePath(p));

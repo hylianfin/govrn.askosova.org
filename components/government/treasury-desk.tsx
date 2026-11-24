@@ -1,0 +1,15 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { recordTreasuryEntry, saveTreasuryEvent } from "@/lib/actions/government";
+import { ErrorNote, box, useAction } from "./ui";
+
+type Event = { id: string; title: string; school: string; ticket_price_cents: number; status: string };
+export function TreasuryDesk({ events, balance }: { events: Event[]; balance: number }) {
+  const { run, error, pending } = useAction(); const [eventId, setEventId] = useState(events[0]?.id ?? "");
+  return <div className="grid gap-6 lg:grid-cols-2">
+    <section className="rounded-xl border border-border bg-card p-5 space-y-4"><div><p className="text-sm font-medium">Current balance</p><p className="font-display text-4xl font-bold text-navy">${(balance / 100).toFixed(2)}</p></div><form action={(fd) => run(() => saveTreasuryEvent(String(fd.get("title")), fd.get("school") as "hs" | "ms" | "joint", Number(fd.get("price"))))} className="space-y-3"><p className="font-medium">New ticketed event</p><input name="title" required placeholder="Spring social" className={`${box} w-full`} /><div className="grid grid-cols-2 gap-3"><select name="school" className={box}><option value="hs">High School</option><option value="ms">Middle School</option><option value="joint">Joint</option></select><input name="price" required min="0" step="0.01" type="number" placeholder="Ticket price" className={box} /></div><Button disabled={pending}>Create event</Button></form></section>
+    <section className="rounded-xl border border-border bg-card p-5 space-y-4"><p className="font-medium">Point of sale / ledger</p>{events.length === 0 ? <p className="text-sm text-muted-foreground">Create an event before recording a sale.</p> : <form action={(fd) => run(() => recordTreasuryEntry(String(fd.get("event")), fd.get("kind") as "ticket_sale" | "refund" | "expense" | "adjustment", Number(fd.get("amount")), Number(fd.get("quantity")), fd.get("method") as "cash" | "card" | "other", String(fd.get("note"))))} className="space-y-3"><select name="event" value={eventId} onChange={(e) => setEventId(e.target.value)} className={`${box} w-full`}>{events.map((e) => <option key={e.id} value={e.id}>{e.title} · ${(e.ticket_price_cents / 100).toFixed(2)}</option>)}</select><div className="grid grid-cols-2 gap-3"><select name="kind" className={box}><option value="ticket_sale">Ticket sale</option><option value="refund">Refund</option><option value="expense">Expense</option><option value="adjustment">Adjustment</option></select><select name="method" className={box}><option value="cash">Cash</option><option value="card">Card</option><option value="other">Other</option></select></div><div className="grid grid-cols-2 gap-3"><input name="amount" required min="0.01" step="0.01" type="number" placeholder="Amount" className={box} /><input name="quantity" required min="1" defaultValue="1" type="number" className={box} /></div><input name="note" placeholder="Optional note" className={`${box} w-full`} /><Button disabled={pending}>Record transaction</Button></form>}<ErrorNote message={error} /></section>
+  </div>;
+}
